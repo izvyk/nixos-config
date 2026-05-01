@@ -1,0 +1,43 @@
+# ==========================================
+# 1. DEFAULT DENY
+# ==========================================
+# Ignore absolutely everything by default.
+*
+
+# ==========================================
+# 2. ALLOW EXCEPTIONS
+# ==========================================
+# Un-ignore directories so Git can traverse them to find allowed files.
+!*/
+
+# Allow Nix configurations.
+!*.nix
+
+# Allow securely encrypted agenix secrets.
+!*.age
+
+# Allow standard Git and documentation files.
+!.gitignore
+!.gitattributes
+!README.md
+!LICENSE
+
+# ==========================================
+# 3. EXPLICIT RE-DENY (Overrides Allow)
+# ==========================================
+# Even if a file ends in an allowed extension (like .nix), if it matches 
+# these patterns, strip it back out.
+
+# NixOS build symlinks. Never track these.
+result
+result-*
+
+# Editor swap, backup, and session files. 
+# CRITICAL: If agenix crashes during an edit, Vim/Nano might leave a .swp 
+# containing the plaintext secret on disk. This ensures it never enters Git.
+*.swp
+*.swo
+*~
+.*.swp
+.netrwhist
+
