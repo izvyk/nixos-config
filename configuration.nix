@@ -102,6 +102,29 @@ in
   # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
+  i18n = {
+    defaultLocale = "en_US.UTF-8";
+
+    supportedLocales = [
+      "en_US.UTF-8/UTF-8"
+      "de_DE.UTF-8/UTF-8"
+      "ru_RU.UTF-8/UTF-8"
+    ];
+    extraLocaleSettings = {
+      LC_CTYPE = "en_US.UTF-8";
+      LC_NUMERIC = "de_DE.UTF-8";
+      LC_TIME = "de_DE.UTF-8";
+      LC_COLLATE = "en_US.UTF-8";
+      LC_MONETARY = "de_DE.UTF-8";
+      LC_MESSAGES = "en_US.UTF-8";
+      LC_PAPER = "de_DE.UTF-8";
+      LC_NAME = "en_US.UTF-8";
+      LC_ADDRESS = "de_DE.UTF-8";
+      LC_TELEPHONE = "de_DE.UTF-8";
+      LC_MEASUREMENT = "de_DE.UTF-8";
+      LC_IDENTIFICATION = "en_US.UTF-8";
+    };
+  };
   # i18n.defaultLocale = "en_US.UTF-8";
   # console = {
   #   font = "Lat2-Terminus16";
@@ -151,6 +174,8 @@ in
       "battery"
       "power_profile"
       "i2c"
+      "libvirtd"
+      "kvm"
     ];
 
   };
@@ -244,8 +269,8 @@ in
         delta
 
         unstable.devenv
-	gocryptfs
-	vaults
+        gocryptfs
+        vaults
       ];
 
       # 2. Your foot config from earlier
@@ -686,7 +711,7 @@ in
             "-" = "volumedown";
             "equal" = "volumeup";
 
-	    # Developer Additions: Vim navigation
+            # Developer Additions: Vim navigation
             h = "left";
             j = "down";
             k = "up";
@@ -700,24 +725,34 @@ in
     };
   };
 
-  environment.etc."crypttab".text = ''
-    data UUID=526035a8-e49a-4b98-b79d-b74096ac51de /root/d.key bitlk
-  '';
-
-  fileSystems."/mnt/data" = {
-    device = "/dev/mapper/data";
-    fsType = "ntfs"; # Or "exfat", depending on the partition format
-    options = [
-      "rw"
-      "uid=1000"
-      "gid=100" # Make your user (usually 1000) the owner
-      "umask=0022" # Ensure files are readable
-      "nofail" # Don't crash boot if the drive is missing
-      "x-gvfs-show" # <--- CRITICAL: Forces Nautilus to show it in Sidebar
-      "x-gvfs-name=Data" # <--- Optional: Gives it a pretty name in Nautilus
-
-    ]; # Permission settings for NTFS
+  services.udisks2.settings = {
+    "mount_options.conf" = {
+      defaults = {
+        defaults = "noatime,noexec";
+        # Example: Extra defaults specifically for BTRFS removable drives
+        # btrfs_defaults = "noatime,compress=zstd";
+      };
+    };
   };
+
+  # environment.etc."crypttab".text = ''
+  #   data UUID=526035a8-e49a-4b98-b79d-b74096ac51de /root/d.key bitlk
+  # '';
+
+  # fileSystems."/mnt/data" = {
+  #   device = "/dev/mapper/data";
+  #   fsType = "ntfs"; # Or "exfat", depending on the partition format
+  #   options = [
+  #     "rw"
+  #     "uid=1000"
+  #     "gid=100" # Make your user (usually 1000) the owner
+  #     "umask=0022" # Ensure files are readable
+  #     "nofail" # Don't crash boot if the drive is missing
+  #     "x-gvfs-show" # <--- CRITICAL: Forces Nautilus to show it in Sidebar
+  #     "x-gvfs-name=Data" # <--- Optional: Gives it a pretty name in Nautilus
+  #
+  #   ]; # Permission settings for NTFS
+  # };
 
   #   programs.git = {
   #   enable = true;
@@ -745,7 +780,7 @@ in
         IdentitiesOnly yes
   '';
 
-  programs.ssh.knownHosts."github.com".publicKey = 
+  programs.ssh.knownHosts."github.com".publicKey =
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
 
   # In /etc/nixos/configuration.nix
@@ -864,6 +899,18 @@ in
     pulse.enable = true;
   };
   security.rtkit.enable = true; # Необходим для приоритезации аудио-потоков
+
+  virtualisation.libvirtd = {
+    enable = true;
+    qemu = {
+      package = pkgs.qemu_kvm;
+      runAsRoot = false;
+      # swtpm.enable = true;      # optional, only if you want vTPM anyway
+      # ovmf.enable = true;       # UEFI firmware
+    };
+  };
+
+  programs.virt-manager.enable = true;
 
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
@@ -995,13 +1042,6 @@ in
   };
   services.fwupd.enable = true;
 
-  swapDevices = [
-    {
-      device = "/swap/swapfile";
-      size = 16 * 1024;
-    }
-  ];
-
   services.udev.packages = [
     pkgs.via
     pkgs.brillo
@@ -1020,7 +1060,7 @@ in
   systemd.settings.Manager.RebootWatchdogSec = "0";
 
   boot = {
-    resumeDevice = "/dev/mapper/cryptnix";
+    resumeDevice = "/dev/mapper/cryptroot";
     kernelPackages = pkgs.linuxPackages_latest;
     consoleLogLevel = 0;
     loader = {
@@ -1037,7 +1077,7 @@ in
       "net.ipv4.ip_forward" = 1;
     };
     kernelParams = [
-      "resume_offset=533760"
+      "resume_offset=92460818"
       "quiet"
       "bgrt_disable"
       "loglevel=3"
