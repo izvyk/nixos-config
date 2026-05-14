@@ -271,6 +271,7 @@ in
         unstable.devenv
         gocryptfs
         vaults
+	obsidian
       ];
 
       # 2. Your foot config from earlier
@@ -653,6 +654,13 @@ in
     # gnomeExtensions.simple-break-reminder
 
     agenix
+
+    gst_all_1.gstreamer
+    gst_all_1.gst-plugins-base
+    gst_all_1.gst-plugins-good
+    gst_all_1.gst-plugins-bad
+    gst_all_1.gst-plugins-ugly
+    gst_all_1.gst-libav
   ];
 
   programs.kdeconnect = {
@@ -731,6 +739,12 @@ in
         defaults = "noatime,noexec";
         # Example: Extra defaults specifically for BTRFS removable drives
         # btrfs_defaults = "noatime,compress=zstd";
+
+	vfat_defaults = "noatime,noexec";
+        exfat_defaults = "noatime,noexec";
+        ntfs_defaults = "noatime,noexec";
+        ext4_defaults = "noatime,noexec";
+        btrfs_defaults = "noatime,noexec";
       };
     };
   };
@@ -824,6 +838,7 @@ in
   environment.sessionVariables = {
     QT_QPA_PLATFORM = "wayland";
     NIXOS_OZONE_WL = "1";
+    GST_PLUGIN_PATH = "/run/current-system/sw/lib/gstreamer-1.0/";
   };
 
   # # environment.etc = {
@@ -1015,6 +1030,11 @@ in
     settings.cores = 6;
     # daemonCPUSchedPolicy = "idle";
     # daemonIOSchedClass = "idle";
+	gc = {
+	    automatic = true;
+	    dates = "weekly";
+	    options = "--delete-older-than 30d";
+	  };
   };
 
   systemd.sleep.extraConfig = ''
@@ -1035,11 +1055,6 @@ in
     operation = "boot";
   };
 
-  nix.gc = {
-    automatic = true;
-    dates = "weekly";
-    options = "--delete-older-than 30d";
-  };
   services.fwupd.enable = true;
 
   services.udev.packages = [
@@ -1096,7 +1111,7 @@ in
   # Copy the NixOS configuration file and link it from the resulting system
   # (/run/current-system/configuration.nix). This is useful in case you
   # accidentally delete configuration.nix.
-  # system.copySystemConfiguration = true;
+  system.copySystemConfiguration = true;
 
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.
