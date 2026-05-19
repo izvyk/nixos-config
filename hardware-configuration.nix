@@ -23,6 +23,8 @@
   boot.kernelModules = [ "kvm-amd" ];
   boot.extraModulePackages = [ ];
 
+  hardware.amdgpu.initrd.enable = true;
+
   fileSystems."/" = {
     device = "/dev/mapper/cryptroot";
     fsType = "btrfs";
