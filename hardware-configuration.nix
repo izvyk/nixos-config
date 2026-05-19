@@ -103,7 +103,7 @@
       "nosuid"
       "nodev"
       "noexec"
-      "compress=zstd:9"
+      "compress=zstd:3"
       "x-gvfs-show"
     ];
   };
@@ -119,7 +119,7 @@
       "nosuid"
       "nodev"
       "noexec"
-      "compress=zstd:9"
+      "compress=zstd:3"
       "x-gvfs-show"
     ];
   };
@@ -135,7 +135,7 @@
       "nosuid"
       "nodev"
       "noexec"
-      "compress=zstd:9"
+      "compress=zstd:3"
       "x-gvfs-show"
     ];
   };
@@ -151,7 +151,7 @@
       "nosuid"
       "nodev"
       "noexec"
-      "compress=zstd:9"
+      "compress=zstd:3"
       "x-gvfs-show"
     ];
   };
