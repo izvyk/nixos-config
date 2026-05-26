@@ -183,6 +183,7 @@ in
       "i2c"
       "libvirtd"
       "kvm"
+      "adbusers"
     ];
 
   };
@@ -311,6 +312,8 @@ in
     enable = true;
     package = pkgs.unstable.niri;
   };
+
+  programs.adb.enable = true;
 
   programs.mangowc = {
     enable = true;
@@ -668,6 +671,8 @@ in
     gst_all_1.gst-plugins-bad
     gst_all_1.gst-plugins-ugly
     gst_all_1.gst-libav
+
+    easyeffects
   ];
 
   programs.kdeconnect = {
@@ -921,6 +926,25 @@ in
     pulse.enable = true;
   };
   security.rtkit.enable = true; # Необходим для приоритезации аудио-потоков
+
+  services.pipewire.extraConfig.pipewire."99-virtual-mic" = {
+  "context.modules" = [
+    {
+      name = "libpipewire-module-loopback";
+      args = {
+        "node.description" = "Pixel 8 Virtual Mic";
+        "capture.props" = {
+          "media.class" = "Audio/Sink";
+          "audio.position" = [ "MONO" ];
+        };
+        "playback.props" = {
+          "media.class" = "Audio/Source";
+          "audio.position" = [ "MONO" ];
+        };
+      };
+    }
+  ];
+};
 
   virtualisation.libvirtd = {
     enable = true;
