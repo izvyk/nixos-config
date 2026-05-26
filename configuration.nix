@@ -89,10 +89,16 @@ in
   networking.networkmanager = {
     enable = true;
     wifi.powersave = true;
+    wifi.backend = "iwd";
     plugins = with pkgs; [
       networkmanager-openvpn
     ];
   };
+  systemd.services.NetworkManager-wait-online.enable = false;
+  services.avahi.enable = false;
+  systemd.services.ModemManager.enable = false;
+  systemd.services.tailscaled.serviceConfig.Type = lib.mkForce "simple";
+  systemd.services.libvirtd.wantedBy = lib.mkForce []; # no autostart but keep socket activation
 
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
@@ -1150,6 +1156,7 @@ in
     initrd = {
       verbose = false;
       systemd.enable = true;
+      compressor = "${pkgs.zstd}/bin/zstd -19 -T0";
     };
     kernel.sysctl = {
       "net.ipv4.ip_forward" = 1;
@@ -1214,17 +1221,14 @@ in
     kernelParams = [
       "resume_offset=92460818"
       "quiet"
-      "bgrt_disable"
+      # "bgrt_disable"
       "loglevel=3"
       "systemd.show_status=auto"
       "rd.udev.log_level=3"
       "udev.log_priority=3"
-      # "amd_pstate=active"
-      "i8042.nopnp"
       "iwlwifi.power_save=1"
       "iwlmvm.power_scheme=3"
-      "amdgpu.securedisplay=0"
-      "amdgpu.runpm=0"
+      "tsc=unstable"
     ];
   };
 
