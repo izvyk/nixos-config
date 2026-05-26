@@ -68,6 +68,7 @@ in
     # "${unstable-src}/nixos/modules/programs/wayland/dms-shell.nix"
     "${unstable-src}/nixos/modules/programs/wayland/niri.nix"
     "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
+    "${unstable-src}/nixos/modules/services/system/nohang.nix"
 
     # Age module from agenix-src
     "${agenix-src}/modules/age.nix"
@@ -1040,6 +1041,53 @@ in
     ];
   };
 
+  services.nohang = {
+    enable = true;
+    package = pkgs.unstable.nohang;
+    # enableDesktopNotifications = true; # is implied in NixOS when enable = true for nohang package
+  };
+
+  zramSwap = {
+    enable = true;
+    algorithm = "zstd";
+    memoryPercent = 40; 
+    priority = 100; # Maximum priority. Kernel uses this first.
+  };
+
+  # Dynamically allocate the physical swapfile ONLY during hibernation lifecycles.
+  # The swapfile is completely invisible to the kernel during normal runtime.
+  systemd.services.systemd-hibernate.serviceConfig = {
+    ExecStartPre = "-${pkgs.util-linux}/bin/swapon /swap/swapfile";
+    ExecStopPost = "-${pkgs.util-linux}/bin/swapoff /swap/swapfile";
+  };
+
+  systemd.services.systemd-suspend-then-hibernate.serviceConfig = {
+    ExecStartPre = "-${pkgs.util-linux}/bin/swapon /swap/swapfile";
+    ExecStopPost = "-${pkgs.util-linux}/bin/swapoff /swap/swapfile";
+  };
+
+  systemd.services.systemd-logind = {
+    environment = {
+      SYSTEMD_BYPASS_HIBERNATION_MEMORY_CHECK = "1";
+    };
+  };
+
+  # environment.etc."systemd/system-sleep/swap-for-hibernate" = {
+  #   text = ''
+  #     #!/bin/sh
+  #     echo $1/$2
+  #     case "$1/$2" in
+  #       pre/hibernate|pre/hybrid-sleep)
+  # 	/run/current-system/sw/bin/swapon /swap/swapfile
+  # 	;;
+  #       post/hibernate|post/hybrid-sleep)
+  # 	/run/current-system/sw/bin/swapoff /swap/swapfile
+  # 	;;
+  #     esac
+  #   '';
+  #   mode = "0755";
+  # };
+
   # Limit nix rebuilds priority.  When left on the default is uses all available resources which can make the system unusable
   nix = {
     settings.cores = 6;
@@ -1105,6 +1153,63 @@ in
     };
     kernel.sysctl = {
       "net.ipv4.ip_forward" = 1;
+
+      # ---------------------------------------------------------------------
+      # ZRAM-Specific Tuning
+      # ---------------------------------------------------------------------
+      
+      # Myth: "Lower swappiness prevents disk IO." 
+      # Reality: With ZRAM, swap is highly compressed RAM. 
+      # If you set swappiness to 10, the kernel will aggressively drop your filesystem 
+      # cache (file reads, application binaries) to avoid swapping. When you switch 
+      # back to an application, the system stalls while re-reading those files from the NVMe.
+      # Setting this to 100+ tells the kernel: "Compressing memory is cheaper than disk IO. 
+      # Keep the file cache alive and compress idle application memory instead."
+      "vm.swappiness" = 150;
+   
+      # Read-ahead relies on physical disk geometry. When reading from a spinning disk 
+      # or NVMe, pulling contiguous blocks is faster. ZRAM is not a disk. 
+      # ZRAM is compressed memory chunks. Reading ahead in ZRAM wastes CPU cycles 
+      # decompressing pages you haven't even asked for yet. Disable it.
+      "vm.page-cluster" = 0;
+   
+      # ---------------------------------------------------------------------
+      # Memory Allocator & Desktop Latency
+      # ---------------------------------------------------------------------
+      
+      # This controls the distance between the kernel waking up `kswapd` (background 
+      # memory reclaimer) and hitting the absolute limit (OOM). 
+      # Default is 10 (0.1% of RAM). If an application suddenly asks for 1GB of RAM, 
+      # a low watermark means the kernel is caught off guard, stalls the application, 
+      # and furiously frees memory. 
+      # 125 (1.25%) keeps a larger buffer of free RAM ready, preventing micro-stutters 
+      # during sudden workload spikes.
+      "vm.watermark_scale_factor" = 125;
+   
+      # Proactively compact memory in the background. Prevents the kernel from 
+      # struggling to find contiguous memory blocks (like when a VM requests hugepages) 
+      # at the cost of a tiny amount of idle CPU time. 20 is a sane modern default, 
+      # keep it explicit.
+      "vm.compaction_proactiveness" = 20;
+   
+      # ---------------------------------------------------------------------
+      # Writeback IO / BTRFS Stutter Prevention
+      # ---------------------------------------------------------------------
+      
+      # When you save large files or download at gigabit speeds, Linux caches the 
+      # writes in RAM ("dirty pages"). Default dirty_ratio is 20%. 
+      # On a 16GB system, the kernel might buffer 3.2GB of writes in RAM. 
+      # When it finally flushes to the NVMe, especially on BTRFS, it locks up the 
+      # filesystem queue. The entire desktop can freeze for seconds.
+      # We lower these ratios to force the kernel to trickle-write data continuously 
+      # in the background, keeping the IO queue clear and the desktop responsive.
+      
+      # Start writing dirty pages to disk in the background when they hit 5% of RAM.
+      "vm.dirty_background_ratio" = 5;
+      
+      # Force synchronous IO (block the application from writing more) if dirty pages 
+      # somehow hit 10%. Prevents uncontrollable IO debt.
+      "vm.dirty_ratio" = 10;
     };
     kernelParams = [
       "resume_offset=92460818"
