@@ -103,7 +103,7 @@ in
   services.avahi.enable = false;
   systemd.services.ModemManager.enable = false;
   systemd.services.tailscaled.serviceConfig.Type = lib.mkForce "simple";
-  systemd.services.libvirtd.wantedBy = lib.mkForce []; # no autostart but keep socket activation
+  systemd.services.libvirtd.wantedBy = lib.mkForce [ ]; # no autostart but keep socket activation
 
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
@@ -214,77 +214,82 @@ in
       home.packages = with pkgs; [
         # firefox
         # foot # enabled as a service
-        unstable.ghostty
+        # unstable.ghostty
+        # unstable.warp-terminal
+        # unstable.nushell
         # yandex-music
         kdePackages.filelight
-        materialgram
-        telegram-desktop
+        # materialgram
+        # telegram-desktop
         keepassxc
         # gparted
         mpv
         vscode
         qpwgraph
+        cameractrls-gtk4
         eza
-        fusuma
+        # fusuma
         wl-clipboard
-        go
+        # go
         playerctl
         udiskie
         # quickshell
         # yandex-music
         unstable.zed-editor
         unstable.opencode
+        unstable.pi-coding-agent
+        unstable.gemini-cli-bin
         unstable.antigravity
         lazygit
         unstable.yazi
-        gnumake
-        gcc
-        glibc.static
+        # gnumake
+        # gcc
+        # glibc.static
         chromium
         libreoffice
-        zoom-us
+        # zoom-us
 
-        waybar
-        kdePackages.kdeconnect-kde
-        swww
+        # waybar
+        # kdePackages.kdeconnect-kde
+        # swww
         killall
         # cliphist
         wl-gammarelay-rs
-        rofi
-        brillo
-        python3Minimal
-        jq
-        pulseaudio
-        swayimg
+        # rofi
+        # python3Minimal
+        # jq
+        # pulseaudio
+        # swayimg
         unstable.libheif
         parallel
         unstable.imagemagickBig
         # unzip
         libnotify
-        grim
-        unstable.flameshot
+        # grim
+        # unstable.flameshot
         dotool
         ocr-script
 
-        unstable.noctalia-shell
-        unstable.quickshell # The underlying framework Noctalia runs on
-        unstable.brightnessctl
-        unstable.cliphist
-        unstable.wlsunset
+        # unstable.noctalia-shell
+        # unstable.quickshell # The underlying framework Noctalia runs on
+        # unstable.brightnessctl
+        # unstable.cliphist
+        # unstable.wlsunset
         qt6.qtwayland
         kdePackages.qttools
         fd
 
-        unstable.vicinae
-        unstable.contour
+        # unstable.vicinae
+        # unstable.contour
         chezmoi
-        alacritty
+        # alacritty
         delta
 
         unstable.devenv
         gocryptfs
         vaults
-	obsidian
+        obsidian
+        unstable.tuxguitar
       ];
 
       # 2. Your foot config from earlier
@@ -643,6 +648,7 @@ in
         "org/gnome/shell/extensions/just-perfection".activities-button = false;
 
         "org/gnome/desktop/interface".accent-color = "teal";
+        "org/gnome/settings-daemon/plugins/color".night-light-enabled = true;
 
         "org/gnome/shell" = {
           disable-user-extensions = false;
@@ -868,7 +874,7 @@ in
         # Example: Extra defaults specifically for BTRFS removable drives
         # btrfs_defaults = "noatime,compress=zstd";
 
-	vfat_defaults = "noatime,noexec";
+        vfat_defaults = "noatime,noexec";
         exfat_defaults = "noatime,noexec";
         ntfs_defaults = "noatime,noexec";
         ext4_defaults = "noatime,noexec";
@@ -1044,23 +1050,23 @@ in
   security.rtkit.enable = true; # Необходим для приоритезации аудио-потоков
 
   services.pipewire.extraConfig.pipewire."99-virtual-mic" = {
-  "context.modules" = [
-    {
-      name = "libpipewire-module-loopback";
-      args = {
-        "node.description" = "Pixel 8 Virtual Mic";
-        "capture.props" = {
-          "media.class" = "Audio/Sink";
-          "audio.position" = [ "MONO" ];
+    "context.modules" = [
+      {
+        name = "libpipewire-module-loopback";
+        args = {
+          "node.description" = "Pixel 8 Virtual Mic";
+          "capture.props" = {
+            "media.class" = "Audio/Sink";
+            "audio.position" = [ "MONO" ];
+          };
+          "playback.props" = {
+            "media.class" = "Audio/Source";
+            "audio.position" = [ "MONO" ];
+          };
         };
-        "playback.props" = {
-          "media.class" = "Audio/Source";
-          "audio.position" = [ "MONO" ];
-        };
-      };
-    }
-  ];
-};
+      }
+    ];
+  };
 
   virtualisation.libvirtd = {
     enable = true;
@@ -1129,8 +1135,8 @@ in
 
   # 2. Force tailscaled to use nftables (Critical for clean nftables-only systems)
   # This avoids the "iptables-compat" translation layer issues.
-  systemd.services.tailscaled.serviceConfig.Environment = [ 
-    "TS_DEBUG_FIREWALL_MODE=nftables" 
+  systemd.services.tailscaled.serviceConfig.Environment = [
+    "TS_DEBUG_FIREWALL_MODE=nftables"
   ];
 
   hardware.bluetooth = {
@@ -1290,7 +1296,7 @@ in
   zramSwap = {
     enable = true;
     algorithm = "zstd";
-    memoryPercent = 40; 
+    memoryPercent = 40;
     priority = 100; # Maximum priority. Kernel uses this first.
   };
 
@@ -1333,11 +1339,11 @@ in
     settings.cores = 6;
     # daemonCPUSchedPolicy = "idle";
     # daemonIOSchedClass = "idle";
-	gc = {
-	    automatic = true;
-	    dates = "weekly";
-	    options = "--delete-older-than 30d";
-	  };
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
   };
 
   systemd.sleep.extraConfig = ''
@@ -1346,7 +1352,9 @@ in
     HibernateDelaySec=30m
   '';
 
-  powerManagement.powertop.enable = true;
+  # powerManagement.powertop.enable = true;
+  powerManagement.enable = true;
+  # powerManagement.cpuFrequencyGovernor = "powersave";
 
   # Enable auto-upgrades.
   system.autoUpgrade = {
@@ -1393,62 +1401,65 @@ in
       compressor = "${pkgs.zstd}/bin/zstd -19 -T0";
     };
     kernel.sysctl = {
+      # SysRq: enable F R E I S U B
+      "kernel.sysrq" = 244;
+
       "net.ipv4.ip_forward" = 1;
 
       # ---------------------------------------------------------------------
       # ZRAM-Specific Tuning
       # ---------------------------------------------------------------------
-      
-      # Myth: "Lower swappiness prevents disk IO." 
-      # Reality: With ZRAM, swap is highly compressed RAM. 
-      # If you set swappiness to 10, the kernel will aggressively drop your filesystem 
-      # cache (file reads, application binaries) to avoid swapping. When you switch 
+
+      # Myth: "Lower swappiness prevents disk IO."
+      # Reality: With ZRAM, swap is highly compressed RAM.
+      # If you set swappiness to 10, the kernel will aggressively drop your filesystem
+      # cache (file reads, application binaries) to avoid swapping. When you switch
       # back to an application, the system stalls while re-reading those files from the NVMe.
-      # Setting this to 100+ tells the kernel: "Compressing memory is cheaper than disk IO. 
+      # Setting this to 100+ tells the kernel: "Compressing memory is cheaper than disk IO.
       # Keep the file cache alive and compress idle application memory instead."
       "vm.swappiness" = 150;
-   
-      # Read-ahead relies on physical disk geometry. When reading from a spinning disk 
-      # or NVMe, pulling contiguous blocks is faster. ZRAM is not a disk. 
-      # ZRAM is compressed memory chunks. Reading ahead in ZRAM wastes CPU cycles 
+
+      # Read-ahead relies on physical disk geometry. When reading from a spinning disk
+      # or NVMe, pulling contiguous blocks is faster. ZRAM is not a disk.
+      # ZRAM is compressed memory chunks. Reading ahead in ZRAM wastes CPU cycles
       # decompressing pages you haven't even asked for yet. Disable it.
       "vm.page-cluster" = 0;
-   
+
       # ---------------------------------------------------------------------
       # Memory Allocator & Desktop Latency
       # ---------------------------------------------------------------------
-      
-      # This controls the distance between the kernel waking up `kswapd` (background 
-      # memory reclaimer) and hitting the absolute limit (OOM). 
-      # Default is 10 (0.1% of RAM). If an application suddenly asks for 1GB of RAM, 
-      # a low watermark means the kernel is caught off guard, stalls the application, 
-      # and furiously frees memory. 
-      # 125 (1.25%) keeps a larger buffer of free RAM ready, preventing micro-stutters 
+
+      # This controls the distance between the kernel waking up `kswapd` (background
+      # memory reclaimer) and hitting the absolute limit (OOM).
+      # Default is 10 (0.1% of RAM). If an application suddenly asks for 1GB of RAM,
+      # a low watermark means the kernel is caught off guard, stalls the application,
+      # and furiously frees memory.
+      # 125 (1.25%) keeps a larger buffer of free RAM ready, preventing micro-stutters
       # during sudden workload spikes.
       "vm.watermark_scale_factor" = 125;
-   
-      # Proactively compact memory in the background. Prevents the kernel from 
-      # struggling to find contiguous memory blocks (like when a VM requests hugepages) 
-      # at the cost of a tiny amount of idle CPU time. 20 is a sane modern default, 
+
+      # Proactively compact memory in the background. Prevents the kernel from
+      # struggling to find contiguous memory blocks (like when a VM requests hugepages)
+      # at the cost of a tiny amount of idle CPU time. 20 is a sane modern default,
       # keep it explicit.
       "vm.compaction_proactiveness" = 20;
-   
+
       # ---------------------------------------------------------------------
       # Writeback IO / BTRFS Stutter Prevention
       # ---------------------------------------------------------------------
-      
-      # When you save large files or download at gigabit speeds, Linux caches the 
-      # writes in RAM ("dirty pages"). Default dirty_ratio is 20%. 
-      # On a 16GB system, the kernel might buffer 3.2GB of writes in RAM. 
-      # When it finally flushes to the NVMe, especially on BTRFS, it locks up the 
+
+      # When you save large files or download at gigabit speeds, Linux caches the
+      # writes in RAM ("dirty pages"). Default dirty_ratio is 20%.
+      # On a 16GB system, the kernel might buffer 3.2GB of writes in RAM.
+      # When it finally flushes to the NVMe, especially on BTRFS, it locks up the
       # filesystem queue. The entire desktop can freeze for seconds.
-      # We lower these ratios to force the kernel to trickle-write data continuously 
+      # We lower these ratios to force the kernel to trickle-write data continuously
       # in the background, keeping the IO queue clear and the desktop responsive.
-      
+
       # Start writing dirty pages to disk in the background when they hit 5% of RAM.
       "vm.dirty_background_ratio" = 5;
-      
-      # Force synchronous IO (block the application from writing more) if dirty pages 
+
+      # Force synchronous IO (block the application from writing more) if dirty pages
       # somehow hit 10%. Prevents uncontrollable IO debt.
       "vm.dirty_ratio" = 10;
     };
