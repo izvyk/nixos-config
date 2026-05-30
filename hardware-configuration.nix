@@ -92,6 +92,19 @@
     ];
   };
 
+  fileSystems."/.btrfs-fsroot" = {
+    device = "/dev/mapper/cryptroot";
+    fsType = "btrfs";
+    options = [
+      "subvolid=5"
+      "noatime"
+      "discard=async"
+      "nosuid"
+      "nodev"
+      "noexec"
+    ];
+  };
+
   fileSystems."/mnt/data" = {
     device = "/dev/mapper/cryptroot";
     fsType = "btrfs";

@@ -320,6 +320,22 @@ in
 
   programs.adb.enable = true;
 
+  services.btrbk = {
+    instances.home = {
+      onCalendar = "hourly";
+      settings = {
+        snapshot_preserve_min = "3d";
+        snapshot_preserve = "2w 2M";
+        volume = {
+          "/.btrfs-fsroot" = {
+            snapshot_dir = "@snapshots";
+            subvolume = "@home";
+          };
+        };
+      };
+    };
+  };
+
   programs.mangowc = {
     enable = true;
     package = pkgs.unstable.mangowc;
