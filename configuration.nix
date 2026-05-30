@@ -54,6 +54,7 @@ let
 
     rightalt = "overload(altgr, macro(leftmeta+space))";
 
+    insert = "timeout(macro2(-1, 0, insert), 250ms, macro2(-1, 0, S-insert))";
   };
 in
 {
@@ -69,6 +70,8 @@ in
     "${unstable-src}/nixos/modules/programs/wayland/niri.nix"
     "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
     "${unstable-src}/nixos/modules/services/system/nohang.nix"
+    "${unstable-src}/nixos/modules/services/hardware/logiops.nix"
+    "${unstable-src}/nixos/modules/services/hardware/keyd.nix"
 
     # Age module from agenix-src
     "${agenix-src}/modules/age.nix"
@@ -78,6 +81,8 @@ in
   disabledModules = [
     "programs/wayland/niri.nix"
     "programs/wayland/mangowc.nix"
+    "services/hardware/logiops.nix"
+    "services/hardware/keyd.nix"
   ];
 
   networking.hostName = "NixPC"; # Define your hostname.
@@ -570,8 +575,35 @@ in
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".binding = "<Super>Return";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".command = "footclient";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".name = "Terminal";
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".binding = "Launch5";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".command =
+          "/home/izvyk/.local/bin/volume-down";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".name = "Volume down F14";
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".binding = "Launch6";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".command =
+          "/home/izvyk/.local/bin/volume-up";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".name = "Volume up F15";
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".binding = "Launch7";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".command =
+          "/home/izvyk/.local/bin/brightness-down";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".name =
+          "Brightness down F16";
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".binding = "Launch8";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".command =
+          "/home/izvyk/.local/bin/brightness-up";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".name =
+          "Brightness up F17";
+
         "org/gnome/settings-daemon/plugins/media-keys".custom-keybindings = [
           "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
+          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
         ];
 
         # "org/gnome/shell/keybindings".screenshot = "Insert";
@@ -699,14 +731,79 @@ in
 
   services.keyd = {
     enable = true;
+    package = pkgs.unstable.keyd;
     keyboards = {
       # ----------------------------------------------------
       # 1. LAPTOP & ALL OTHER KEYBOARDS
       # ----------------------------------------------------
       default = {
-        ids = [ "*" ];
+        ids = [
+          "*"
+          "-1050:*" # exclude Yubikeys
+          "-0000:0006"
+        ];
         settings = {
           main = sharedMain;
+        };
+      };
+
+      # Mouse remaps (mouse -> logid -> keyd)
+      mxmaster = {
+        ids = [
+          "0000:0000"
+          "046d:c548"
+        ];
+        settings = {
+          main = {
+            # Thumb button
+            "f20" = "overload(thumb_layer, layer(meta))";
+
+            # Normal scroll wheel
+            "f18" = "scrollup";
+            "f19" = "scrolldown";
+
+            # player controls on back/forward
+            "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, nextsong))";
+            "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, previoussong))";
+
+            # Right mouse key as a layer trigger
+            "rightmouse" = "overload(rightmouse_layer, rightmouse)";
+
+            # Probably destructive
+            # "leftmouse+rightmouse" = "f5";
+          };
+
+          "thumb_layer:A" = {
+            # classic zoom
+            "leftmouse" = "C-minus";
+            "rightmouse" = "C-equal";
+            "leftmouse+rightmouse" = "C-0";
+
+            # touchpad-style zoom (e.g. in browsers)
+            "f18" = "scrolldown";
+            "f19" = "scrollup";
+
+            # misc
+            "middlemouse" = "f5";
+            # "playpause" = "nextsong";
+
+            # "rightmouse" = "overload(horizontalscroll_layer, C-equal)";
+            # "leftmouse" = "overload(zoom_reset_left_layer, C-minus)";
+            # "rightmouse" = "overload(zoom_reset_right_layer, C-equal)";
+          };
+
+          "rightmouse_layer" = {
+            # horizontal scroll for the main wheel
+            "f18" = "scrollleft";
+            "f19" = "scrollright";
+
+            # Brightness for thumb wheel
+            "f14" = "f16";
+            "f15" = "f17";
+
+            "middlemouse" = "f5";
+          };
+
         };
       };
 
@@ -714,11 +811,13 @@ in
       # 2. EXTERNAL KEYBOARD (IQUNIX Magi 65)
       # ----------------------------------------------------
       external_iqunix = {
-        # Replace with your actual IQUNIX USB IDs via lsusb
-        ids = [ "320f:5088" ];
+        ids = [
+          "320f:5088"
+        ];
         settings = {
           main = sharedMain // {
-            space = "overloadt(space_layer, space, 150)";
+            space = "overloadt(space_layer, space, 300)";
+            home = "timeout(macro2(-1, 0, home), 250ms, macro2(-1, 0, f24))";
           };
 
           space_layer = {
@@ -738,7 +837,8 @@ in
             l = "right";
 
             # Developer Additions: Quality of life
-            backspace = "delete";
+            n = "backspace";
+            m = "delete";
           };
         };
       };
@@ -1031,24 +1131,118 @@ in
     };
   };
   hardware.i2c.enable = true;
+  hardware.brillo.enable = true;
 
-  # 1. Enable the Solaar daemon/rules
-  hardware.logitech.wireless.enable = true;
-  hardware.logitech.wireless.enableGraphical = true;
+  # Enable logid
+  services.logiops = {
+    enable = true;
+    package = pkgs.unstable.logiops;
 
-  systemd.user.services = {
-    # solaar = {
-    #   enable = true;
-    #   description = "Solaar for Logitech devices";
-    #   after = [ "graphical-session.target" ];
-    #   partOf = [ "graphical-session.target" ];
-    #   wantedBy = [ "graphical-session.target" ];
-    #   serviceConfig = {
-    #     ExecStart = "${pkgs.solaar}/bin/solaar --window=hide";
-    #     Restart = "on-failure";
-    #     RestartSec = "5";
-    #   };
-    # };
+    config = {
+      devices = [
+        {
+          name = "MX Master 3S For Business";
+
+          # Firmware level optimizations
+          smartshift = {
+            on = true;
+            threshold = 10;
+          };
+
+          dpi = 1000;
+
+          # hiresscroll = {
+          #   hires = false;
+          #   invert = false;
+          #   target = false;
+          # };
+
+          hiresscroll = {
+            hires = false;
+            invert = false;
+            target = true;
+            up = {
+              mode = "OnInterval";
+              interval = 1;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_F18" ];
+              };
+              # action = { type = "Keypress"; keys = [ "KEY_VOLUMEDOWN" ]; };
+            };
+            down = {
+              mode = "OnInterval";
+              interval = 1;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_F19" ];
+              };
+              # action = { type = "Keypress"; keys = [ "KEY_VOLUMEUP" ]; };
+            };
+          };
+
+          # Thumbwheel mapped directly to native OS volume hooks
+          thumbwheel = {
+            divert = true;
+            invert = false;
+            left = {
+              mode = "OnInterval";
+              interval = 1;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_F14" ];
+              };
+              # action = { type = "Keypress"; keys = [ "KEY_VOLUMEDOWN" ]; };
+            };
+            right = {
+              mode = "OnInterval";
+              interval = 1;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_F15" ];
+              };
+              # action = { type = "Keypress"; keys = [ "KEY_VOLUMEUP" ]; };
+            };
+          };
+
+          buttons = [
+            # The Thumb Gesture Button
+            {
+              cid = 195;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_F20" ];
+              };
+              # action = {
+              #   type = "Gestures";
+              #   gestures = [
+              #     {
+              #       direction = "Down";
+              #       mode = "OnRelease";
+              #       action = { type = "Keypress"; keys = [ "KEY_F5" ]; };
+              #     }
+              #     # {
+              #     #   direction = "None";
+              #     #   mode = "OnRelease";
+              #     #   action = { type = "Keypress"; keys = [ "KEY_F20" ]; };
+              #     #   # action = { type = "Keypress"; keys = [ "KEY_LEFTMETA" ]; };
+              #     # }
+              #   ];
+              # };
+            }
+
+            # The Top Button: Media Play/Pause
+            {
+              cid = 196;
+              action = {
+                type = "Keypress";
+                keys = [ "KEY_PLAYPAUSE" ];
+              };
+            }
+          ];
+        }
+      ];
+    };
   };
 
   security.sudo.enable = false;
@@ -1152,7 +1346,7 @@ in
 
   services.udev.packages = [
     pkgs.via
-    pkgs.brillo
+    # pkgs.brillo
   ];
   services.udev.extraRules = ''
     # Mouse
