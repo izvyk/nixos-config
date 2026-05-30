@@ -334,7 +334,10 @@ in
         volume = {
           "/.btrfs-fsroot" = {
             snapshot_dir = "@snapshots";
-            subvolume = "@home";
+            subvolume = {
+              "@home" = { };
+              "@masterdata" = { };
+            };
           };
         };
       };
