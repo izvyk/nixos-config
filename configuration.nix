@@ -55,6 +55,19 @@ let
     rightalt = "overload(altgr, macro(leftmeta+space))";
 
     insert = "timeout(macro2(-1, 0, insert), 250ms, macro2(-1, 0, S-insert))";
+
+    space = "overloadt(space_layer, space, 300)";
+  };
+  sharedSpaceLayer = {
+    # Developer Additions: Vim navigation
+    h = "left";
+    j = "down";
+    k = "up";
+    l = "right";
+
+    # Developer Additions: Quality of life
+    n = "backspace";
+    m = "delete";
   };
 in
 {
@@ -798,8 +811,8 @@ in
             "f19" = "scrolldown";
 
             # player controls on back/forward
-            "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, nextsong))";
-            "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, previoussong))";
+            "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, previoussong))";
+            "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, nextsong))";
 
             # Right mouse key as a layer trigger
             "rightmouse" = "overload(rightmouse_layer, rightmouse)";
@@ -839,6 +852,8 @@ in
             "middlemouse" = "f5";
           };
 
+          space_layer = sharedSpaceLayer;
+
         };
       };
 
@@ -851,11 +866,10 @@ in
         ];
         settings = {
           main = sharedMain // {
-            space = "overloadt(space_layer, space, 300)";
             home = "timeout(macro2(-1, 0, home), 250ms, macro2(-1, 0, f24))";
           };
 
-          space_layer = {
+          space_layer = sharedSpaceLayer // {
             "1" = "brightnessdown";
             "2" = "brightnessup";
             "7" = "previoussong";
@@ -864,16 +878,6 @@ in
             "0" = "mute";
             "-" = "volumedown";
             "equal" = "volumeup";
-
-            # Developer Additions: Vim navigation
-            h = "left";
-            j = "down";
-            k = "up";
-            l = "right";
-
-            # Developer Additions: Quality of life
-            n = "backspace";
-            m = "delete";
           };
         };
       };
