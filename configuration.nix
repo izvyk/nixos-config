@@ -12,7 +12,7 @@
 let
   # 1. Fetch the unstable tarball and assign its path to a variable
   unstable-src = fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
-  home-manager = fetchTarball "https://github.com/nix-community/home-manager/archive/release-25.11.tar.gz";
+  home-manager = fetchTarball "https://github.com/nix-community/home-manager/archive/release-26.05.tar.gz";
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 
   # 1. We create a custom Tesseract instance with exactly the languages you need.
@@ -68,10 +68,10 @@ in
     # 2. Import the DMS module directly from the downloaded tarball path
     # "${unstable-src}/nixos/modules/programs/wayland/dms-shell.nix"
     "${unstable-src}/nixos/modules/programs/wayland/niri.nix"
-    "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
-    "${unstable-src}/nixos/modules/services/system/nohang.nix"
-    "${unstable-src}/nixos/modules/services/hardware/logiops.nix"
-    "${unstable-src}/nixos/modules/services/hardware/keyd.nix"
+    # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
+    # "${unstable-src}/nixos/modules/services/system/nohang.nix"
+    # "${unstable-src}/nixos/modules/services/hardware/logiops.nix"
+    # "${unstable-src}/nixos/modules/services/hardware/keyd.nix"
 
     # Age module from agenix-src
     "${agenix-src}/modules/age.nix"
@@ -80,9 +80,9 @@ in
   # This tells NixOS to skip loading its default versions of these modules
   disabledModules = [
     "programs/wayland/niri.nix"
-    "programs/wayland/mangowc.nix"
-    "services/hardware/logiops.nix"
-    "services/hardware/keyd.nix"
+    # "programs/wayland/mangowc.nix"
+    # "services/hardware/logiops.nix"
+    # "services/hardware/keyd.nix"
   ];
 
   networking.hostName = "NixPC"; # Define your hostname.
@@ -151,26 +151,26 @@ in
   ### services.xserver.displayManager.gdm.enable = true;
   ### services.xserver.desktopManager.gnome.enable = true;
 
-  nixpkgs = {
-    overlays = [
-      (final: prev: {
-        gnome = prev.gnome.overrideScope (
-          gfinal: gprev: {
-            gvfs = gprev.gvfs.override {
-              googleSupport = true;
-              gnomeSupport = true;
-            };
-          }
-        );
-      })
-    ];
-
-    config = {
-      permittedInsecurePackages = [
-        "libsoup-2.74.3"
-      ];
-    };
-  };
+  # nixpkgs = {
+  #   overlays = [
+  #     (final: prev: {
+  #       gnome = prev.gnome.overrideScope (
+  #         gfinal: gprev: {
+  #           gvfs = gprev.gvfs.override {
+  #             googleSupport = true;
+  #             gnomeSupport = true;
+  #           };
+  #         }
+  #       );
+  #     })
+  #   ];
+  #
+  #   config = {
+  #     permittedInsecurePackages = [
+  #       "libsoup-2.74.3"
+  #     ];
+  #   };
+  # };
 
   users.groups.battery = { };
   users.groups.power_profile = { };
@@ -323,7 +323,6 @@ in
     package = pkgs.unstable.niri;
   };
 
-  programs.adb.enable = true;
 
   services.btrbk = {
     instances.home = {
@@ -344,18 +343,18 @@ in
     };
   };
 
-  programs.mangowc = {
-    enable = true;
-    package = pkgs.unstable.mangowc;
-  };
+  # programs.mangowc = {
+  #   enable = true;
+  #   package = pkgs.unstable.mangowc;
+  # };
 
-  programs.hyprland = {
-    enable = false;
-    withUWSM = true;
-    xwayland.enable = false;
-  };
-  programs.hyprlock.enable = false;
-  services.hypridle.enable = false;
+  # programs.hyprland = {
+  #   enable = false;
+  #   withUWSM = true;
+  #   xwayland.enable = false;
+  # };
+  # programs.hyprlock.enable = false;
+  # services.hypridle.enable = false;
 
   # programs.firefox.enable = true;
   programs.firefox = {
@@ -532,7 +531,7 @@ in
   ];
   services.gnome.sushi.enable = true;
   services.gnome.gnome-online-accounts.enable = true;
-  services.gnome.gnome-keyring.enable = lib.mkDefault false;
+  # services.gnome.gnome-keyring.enable = lib.mkDefault false;
 
   # services.fprintd.enable = true;
 
@@ -691,7 +690,7 @@ in
     linux-firmware
     neovim
     bat
-    unstable.btop
+    btop
     zoxide
     file
     nixfmt-rfc-style
@@ -730,6 +729,7 @@ in
     gst_all_1.gst-libav
 
     easyeffects
+    android-tools
   ];
 
   programs.kdeconnect = {
@@ -756,7 +756,7 @@ in
 
   services.keyd = {
     enable = true;
-    package = pkgs.unstable.keyd;
+    # package = pkgs.unstable.keyd;
     keyboards = {
       # ----------------------------------------------------
       # 1. LAPTOP & ALL OTHER KEYBOARDS
@@ -1161,7 +1161,7 @@ in
   # Enable logid
   services.logiops = {
     enable = true;
-    package = pkgs.unstable.logiops;
+    # package = pkgs.unstable.logiops;
 
     config = {
       devices = [
@@ -1292,7 +1292,7 @@ in
 
   services.nohang = {
     enable = true;
-    package = pkgs.unstable.nohang;
+    # package = pkgs.unstable.nohang;
     # enableDesktopNotifications = true; # is implied in NixOS when enable = true for nohang package
   };
 
@@ -1349,11 +1349,11 @@ in
     };
   };
 
-  systemd.sleep.extraConfig = ''
-    AllowSuspendThenHibernate=yes
-    HibernateOnACPower=yes
-    HibernateDelaySec=30m
-  '';
+  systemd.sleep.settings.Sleep = {
+    AllowSuspendThenHibernate = "yes";
+    HibernateOnACPower = "yes";
+    HibernateDelaySec = "30m";
+  };
 
   # powerManagement.powertop.enable = true;
   powerManagement.enable = true;
