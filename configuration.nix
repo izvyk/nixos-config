@@ -323,6 +323,12 @@ in
     package = pkgs.unstable.niri;
   };
 
+  age.secrets."btrbk-ssh-key" = {
+    file = ./secrets/btrbk-ssh-key.age;
+    owner = "root";
+    group = "root";
+    mode = "0400";
+  };
 
   services.btrbk = {
     instances.home = {
@@ -330,6 +336,10 @@ in
       settings = {
         snapshot_preserve_min = "3d";
         snapshot_preserve = "2w 2M";
+
+	stream_compress = "lz4";
+	    ssh_identity = config.age.secrets."btrbk-ssh-key".path;
+    ssh_user = "btrbk";
         volume = {
           "/.btrfs-fsroot" = {
             snapshot_dir = "@snapshots";

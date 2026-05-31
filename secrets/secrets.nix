@@ -6,4 +6,5 @@ in
 {
   "syncthing-cert.age".publicKeys = [ root ];
   "syncthing-key.age".publicKeys = [ root ];
+  "btrbk-ssh-key.age".publicKeys = [ root ];
 }
