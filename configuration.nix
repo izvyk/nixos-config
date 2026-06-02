@@ -98,8 +98,7 @@ in
     # "services/hardware/keyd.nix"
   ];
 
-  networking.hostName = "NixPC"; # Define your hostname.
-  # networking.hostName = "nixos"; # Define your hostname.
+  networking.hostName = "NixPC";
   # Pick only one of the below networking options.
   # networking.wireless.enable = true;  # Enables wireless support via wpa_supplicant.
   # networking.networkmanager.enable = true;  # Easiest to use and most distros use this by default.
@@ -350,9 +349,9 @@ in
         snapshot_preserve_min = "3d";
         snapshot_preserve = "2w 2M";
 
-	stream_compress = "lz4";
-	    ssh_identity = config.age.secrets."btrbk-ssh-key".path;
-    ssh_user = "btrbk";
+        stream_compress = "lz4";
+        ssh_identity = config.age.secrets."btrbk-ssh-key".path;
+        ssh_user = "btrbk";
         volume = {
           "/.btrfs-fsroot" = {
             snapshot_dir = "@snapshots";
@@ -665,7 +664,10 @@ in
         "org/gnome/shell/extensions/display-brightness-ddcutil".show-all-slider = true;
         "org/gnome/shell/extensions/display-brightness-ddcutil".show-sliders-in-submenu = true;
 
-        "org/gnome/shell/extensions/clipboard-indicator".excluded-apps = [ "KeePassXC" ];
+        "org/gnome/shell/extensions/clipboard-indicator".excluded-apps = [
+          "KeePassXC"
+          "org.keepassxc.KeePassXC"
+        ];
 
         # "org/gnome/shell/extensions/just-perfection".search = false;
         "org/gnome/shell/extensions/just-perfection".top-panel-position = lib.gvariant.mkInt32 1;
@@ -716,7 +718,7 @@ in
     btop
     zoxide
     file
-    nixfmt-rfc-style
+    nixfmt
     ddcutil
 
     nautilus
@@ -1045,6 +1047,7 @@ in
     owner = "izvyk";
     group = "users";
   };
+
   services.resolved.enable = true;
 
   services.upower.enable = true;
