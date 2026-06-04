@@ -1316,7 +1316,7 @@ in
   zramSwap = {
     enable = true;
     algorithm = "zstd";
-    memoryPercent = 40;
+    memoryPercent = 50;
     priority = 100; # Maximum priority. Kernel uses this first.
   };
 
@@ -1403,6 +1403,18 @@ in
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="214b", ATTR{idProduct}=="7260", ATTR{power/autosuspend}="-1", ATTR{power/control}="on"
   '';
 
+  services.ananicy = {
+    enable = true;
+    package = pkgs.ananicy-cpp;
+    # Uses the exact rule set maintained by the CachyOS community
+    rulesProvider = pkgs.ananicy-rules-cachyos;
+    settings = {
+      apply_cgroup = false;
+      cgroup_load = false;
+      cgroup_realtime_workaround = lib.mkForce false;
+    };
+  };
+
   systemd.settings.Manager.RebootWatchdogSec = "0";
 
   boot = {
@@ -1424,7 +1436,8 @@ in
       # SysRq: enable F R E I S U B
       "kernel.sysrq" = 244;
 
-      "net.ipv4.ip_forward" = 1;
+      "net.ipv4.tcp_congestion_control" = "bbr";
+      "net.core.default_qdisc" = "fq";
 
       # ---------------------------------------------------------------------
       # ZRAM-Specific Tuning
@@ -1477,11 +1490,12 @@ in
       # in the background, keeping the IO queue clear and the desktop responsive.
 
       # Start writing dirty pages to disk in the background when they hit 5% of RAM.
-      "vm.dirty_background_ratio" = 5;
+      # "vm.dirty_background_ratio" = 5;
+      "vm.dirty_background_bytes" = 268435456; # 256MB
 
       # Force synchronous IO (block the application from writing more) if dirty pages
       # somehow hit 10%. Prevents uncontrollable IO debt.
-      "vm.dirty_ratio" = 10;
+      "vm.dirty_bytes" = 536870912; # 512MB
     };
     kernelParams = [
       "resume_offset=92460818"
@@ -1493,6 +1507,7 @@ in
       "udev.log_priority=3"
       "iwlwifi.power_save=1"
       "iwlmvm.power_scheme=3"
+      "nmi_watchdog=0"
       "tsc=unstable"
     ];
   };
