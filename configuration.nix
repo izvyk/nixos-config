@@ -794,6 +794,7 @@ in
         ];
         settings = {
           main = sharedMain;
+          space_layer = sharedSpaceLayer;
         };
       };
 
@@ -853,9 +854,6 @@ in
 
             "middlemouse" = "f5";
           };
-
-          space_layer = sharedSpaceLayer;
-
         };
       };
 
