@@ -1161,6 +1161,9 @@ in
     allowedUDPPorts = [ config.services.tailscale.port ];
   };
 
+  # NixOS firewall will block wg traffic because of rpfilter
+  networking.firewall.checkReversePath = "loose";
+
   # 2. Force tailscaled to use nftables (Critical for clean nftables-only systems)
   # This avoids the "iptables-compat" translation layer issues.
   systemd.services.tailscaled.serviceConfig.Environment = [
