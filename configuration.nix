@@ -263,7 +263,7 @@ in
 
         # waybar
         # kdePackages.kdeconnect-kde
-        # swww
+        awww
         killall
         # cliphist
         wl-gammarelay-rs
@@ -296,6 +296,7 @@ in
         chezmoi
         # alacritty
         delta
+        tmux
 
         unstable.devenv
         gocryptfs
