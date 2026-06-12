@@ -56,7 +56,7 @@ let
 
     insert = "timeout(macro2(-1, 0, insert), 250ms, macro2(-1, 0, S-insert))";
 
-    space = "overloadt(space_layer, space, 300)";
+    space = "overloadt(space_layer, space, 250)";
   };
   sharedSpaceLayer = {
     # Developer Additions: Vim navigation
@@ -618,6 +618,15 @@ in
         "org/gnome/desktop/wm/keybindings".switch-windows-backward = [ "<Shift><Control>Tab" ];
         "org/gnome/desktop/wm/keybindings".close = [ "<Super>q" ];
 
+
+	# To avoid confusions when switching between iqunix keyboard and laptop keyboard
+        "org/gnome/desktop/wm/keybindings".maximize = [ "<Super>k" ];
+        "org/gnome/desktop/wm/keybindings".unmaximize = [ "<Super>j" ];
+        "org/gnome/mutter/keybindings".toggle-tiled-left = [ "<Super>h" ];
+        "org/gnome/mutter/keybindings".toggle-tiled-right = [ "<Super>l" ];
+        "org/gnome/desktop/wm/keybindings".minimize = [ "<Super>m" ];
+
+
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".binding = "<Super>Return";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".command = "footclient";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".name = "Terminal";
@@ -832,8 +841,8 @@ in
             "leftmouse+rightmouse" = "C-0";
 
             # touchpad-style zoom (e.g. in browsers)
-            "f18" = "scrolldown";
-            "f19" = "scrollup";
+            "f18" = "scrollup";
+            "f19" = "scrolldown";
 
             # misc
             "middlemouse" = "f5";
