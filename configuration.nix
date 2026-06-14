@@ -594,10 +594,10 @@ in
         };
         "org/gnome/settings-daemon/plugins/power".power-button-action = "nothing";
         "org/gnome/shell/app-switcher".current-workspace-only = true;
-        "org/gnome/desktop/break-reminders".selected-breaks = [
-          "eyesight"
-          # "movement"
-        ];
+        # "org/gnome/desktop/break-reminders".selected-breaks = [
+        #   "eyesight"
+        #   "movement"
+        # ];
         # "org/gnome/desktop/break-reminders/movement" = {
         #   interval-seconds = lib.gvariant.mkUint32 3600;
         #   play-sound = false;
@@ -635,26 +635,20 @@ in
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".name = "Terminal";
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".binding = "Launch5";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".command =
-          "/home/izvyk/.local/bin/volume-down";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".command = "/home/izvyk/.local/bin/volume-down";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".name = "Volume down F14";
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".binding = "Launch6";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".command =
-          "/home/izvyk/.local/bin/volume-up";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".command = "/home/izvyk/.local/bin/volume-up";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".name = "Volume up F15";
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".binding = "Launch7";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".command =
-          "/home/izvyk/.local/bin/brightness-down";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".name =
-          "Brightness down F16";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".command = "/home/izvyk/.local/bin/brightness-down";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".name = "Brightness down F16";
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".binding = "Launch8";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".command =
-          "/home/izvyk/.local/bin/brightness-up";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".name =
-          "Brightness up F17";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".command = "/home/izvyk/.local/bin/brightness-up";
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".name = "Brightness up F17";
 
         "org/gnome/settings-daemon/plugins/media-keys".custom-keybindings = [
           "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
@@ -674,11 +668,10 @@ in
 
         # "org/gnome/shell/extensions/simplebreakreminder".time-between-breaks = lib.gvariant.mkUint32 60;
 
-        "org/gnome/shell/extensions/display-brightness-ddcutil".show-all-slider = true;
-        "org/gnome/shell/extensions/display-brightness-ddcutil".show-sliders-in-submenu = true;
+        # "org/gnome/shell/extensions/display-brightness-ddcutil".show-all-slider = true;
+        # "org/gnome/shell/extensions/display-brightness-ddcutil".show-sliders-in-submenu = true;
 
         "org/gnome/shell/extensions/clipboard-indicator".excluded-apps = [
-          "KeePassXC"
           "org.keepassxc.KeePassXC"
         ];
 
@@ -701,7 +694,7 @@ in
             "caffeine@patapon.info"
             "clipboard-indicator@tudmotu.com"
             "disconnect-wifi@kgshank.net"
-            "display-brightness-ddcutil@themightydeity.github.com"
+            # "display-brightness-ddcutil@themightydeity.github.com"
             "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com"
             "gsconnect@andyholmes.github.io"
             # "simplebreakreminder@castillodel.com"
