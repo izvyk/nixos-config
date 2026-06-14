@@ -57,6 +57,8 @@ let
     insert = "timeout(macro2(-1, 0, insert), 250ms, macro2(-1, 0, S-insert))";
 
     space = "overloadt(space_layer, space, 250)";
+
+    leftmeta = "overload(meta, macro2(-1, 0, M-o))";
   };
   sharedSpaceLayer = {
     # Developer Additions: Vim navigation
@@ -625,7 +627,8 @@ in
         "org/gnome/mutter/keybindings".toggle-tiled-left = [ "<Super>h" ];
         "org/gnome/mutter/keybindings".toggle-tiled-right = [ "<Super>l" ];
         "org/gnome/desktop/wm/keybindings".minimize = [ "<Super>m" ];
-
+	"org/gnome/settings-daemon/plugins/media-keys".screensaver = [ "<Super>semicolon" ];
+	"org/gnome/mutter".overlay-key = [ "<Super>o" ];
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".binding = "<Super>Return";
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".command = "footclient";
@@ -817,7 +820,8 @@ in
         settings = {
           main = {
             # Thumb button
-            "f20" = "overload(thumb_layer, layer(meta))";
+            # "f20" = "overload(thumb_layer, layer(meta))";
+            "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
 
             # Normal scroll wheel
             "f18" = "scrollup";
