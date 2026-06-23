@@ -624,8 +624,11 @@ in
     gst_all_1.gst-libav
 
     tmux
+
+    nix-index
     android-tools
 
+    man-pages # Provides Linux programmer's manual
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
   ];
 
