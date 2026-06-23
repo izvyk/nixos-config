@@ -54,11 +54,28 @@ let
 
     rightalt = "overload(altgr, macro(leftmeta+space))";
 
-    insert = "timeout(macro2(-1, 0, insert), 250ms, macro2(-1, 0, S-insert))";
+    sysrq = "timeout(macro2(-1, 0, sysrq), 250ms, macro2(-1, 0, S-sysrq))";
 
-    space = "overloadt(space_layer, space, 250)";
+    space = "overloadt(space_layer, space, 300)";
 
-    leftmeta = "overload(meta, macro2(-1, 0, M-o))";
+    # leftmeta = "overload(meta, macro2(-1, 0, M-o))";
+    #
+    # ### MOUSE
+    #
+    # # Thumb button
+    # # "f20" = "overload(thumb_layer, layer(meta))";
+    # "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
+    #
+    # # Normal scroll wheel
+    # "f18" = "scrollup";
+    # "f19" = "scrolldown";
+    #
+    # # player controls on back/forward
+    # "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, previoussong))";
+    # "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, nextsong))";
+    #
+    # # Right mouse key as a layer trigger
+    # "rightmouse" = "overload(rightmouse_layer, rightmouse)";
   };
   sharedSpaceLayer = {
     # Developer Additions: Vim navigation
@@ -71,6 +88,38 @@ let
     n = "backspace";
     m = "delete";
   };
+
+  # thumbLayerA = {
+  #   # classic zoom
+  #   "leftmouse" = "C-minus";
+  #   "rightmouse" = "C-equal";
+  #   "leftmouse+rightmouse" = "C-0";
+  #
+  #   # WARNING: This still works, it just doesn't need to be here!
+  #   # touchpad-style zoom (e.g. in browsers)
+  #   # "f18" = "scrollup";
+  #   # "f19" = "scrolldown";
+  #
+  #   # misc
+  #   "middlemouse" = "f5";
+  #   # "playpause" = "nextsong";
+  #
+  #   # "rightmouse" = "overload(horizontalscroll_layer, C-equal)";
+  #   # "leftmouse" = "overload(zoom_reset_left_layer, C-minus)";
+  #   # "rightmouse" = "overload(zoom_reset_right_layer, C-equal)";
+  # };
+  #
+  # rightmouseLayer = {
+  #   # horizontal scroll for the main wheel
+  #   "f18" = "scrollleft";
+  #   "f19" = "scrollright";
+  #
+  #   # Brightness for thumb wheel
+  #   "f14" = "f16";
+  #   "f15" = "f17";
+  #
+  #   "middlemouse" = "f5";
+  # };
 in
 {
   imports = [
@@ -796,12 +845,17 @@ in
       default = {
         ids = [
           "*"
+          # "0000:0000"
+          # "046d:c548"
           "-1050:*" # exclude Yubikeys
           "-0000:0006"
         ];
         settings = {
           main = sharedMain;
           space_layer = sharedSpaceLayer;
+
+          # "thumb_layer:A" = thumbLayerA;
+          # "rightmouse_layer" = rightmouseLayer;
         };
       };
 
@@ -814,8 +868,8 @@ in
         settings = {
           main = {
             # Thumb button
-            # "f20" = "overload(thumb_layer, layer(meta))";
-            "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
+            "f20" = "overload(thumb_layer, layer(meta))";
+            # "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
 
             # Normal scroll wheel
             "f18" = "scrollup";
@@ -834,13 +888,14 @@ in
 
           "thumb_layer:A" = {
             # classic zoom
-            "leftmouse" = "C-minus";
-            "rightmouse" = "C-equal";
+            "leftmouse" = "macro2(250, 250, C-minus)";
+            "rightmouse" = "macro2(250, 250, C-equal)";
             "leftmouse+rightmouse" = "C-0";
 
+            # WARNING: This still works, it just doesn't need to be here!
             # touchpad-style zoom (e.g. in browsers)
-            "f18" = "scrollup";
-            "f19" = "scrolldown";
+            # "f18" = "scrollup";
+            # "f19" = "scrolldown";
 
             # misc
             "middlemouse" = "f5";
@@ -887,6 +942,9 @@ in
             "-" = "volumedown";
             "equal" = "volumeup";
           };
+
+          # "thumb_layer:A" = thumbLayerA;
+          # "rightmouse_layer" = rightmouseLayer;
         };
       };
     };
