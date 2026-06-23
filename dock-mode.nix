@@ -1,10 +1,10 @@
 { config, pkgs, ... }:
 
 let
-  targetUser = "izvyk"; 
-  
-  cameraUsbId = "1-4"; 
-  # activeAudioProfile = "HiFi (Mic1, Mic2, Speaker)"; 
+  targetUser = "izvyk";
+
+  cameraUsbId = "1-4";
+  # activeAudioProfile = "HiFi (Mic1, Mic2, Speaker)";
   audioPciId = "0000:03:00.6";
   audioCardName = "alsa_card.pci-0000_03_00.6";
 
@@ -59,22 +59,22 @@ let
     fi
   '';
 
-      # This may be nice-to-have, but gnome actually switches the profile whenever the output is chosen in the menu. So restoring this is redundant and even unintuitive for the user
-      # # Wait for the kernel and WirePlumber to discover the newly bound hardware
-      # sleep 0.5 
-      # Step B: Reactivate the profile in WirePlumber
-      # XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR ${pkgs.doas}/bin/doas -u ${targetUser} ${pkgs.pulseaudio}/bin/pactl set-card-profile ${audioCardName} "${activeAudioProfile}"
+  # This may be nice-to-have, but gnome actually switches the profile whenever the output is chosen in the menu. So restoring this is redundant and even unintuitive for the user
+  # # Wait for the kernel and WirePlumber to discover the newly bound hardware
+  # sleep 0.5
+  # Step B: Reactivate the profile in WirePlumber
+  # XDG_RUNTIME_DIR=$XDG_RUNTIME_DIR ${pkgs.doas}/bin/doas -u ${targetUser} ${pkgs.pulseaudio}/bin/pactl set-card-profile ${audioCardName} "${activeAudioProfile}"
 in
 {
   # ACPI trigger for the physical lid switch
   services.acpid = {
-enable = true;
-  handlers = {
-    lid-dock = {
-      event = "button/lid.*";
-      action = "${dockScript}/bin/toggle-dock-mode";
+    enable = true;
+    handlers = {
+      lid-dock = {
+        event = "button/lid.*";
+        action = "${dockScript}/bin/toggle-dock-mode";
+      };
     };
-  };
   };
 
   # This is generally redundant but may be useful if the laptop is booted up with the lid closed so acpi won't trigger. TODO NEEDS TESTING
