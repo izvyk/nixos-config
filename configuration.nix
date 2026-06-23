@@ -76,6 +76,7 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./dock-mode.nix
 
     # <home-manager/nixos>
     (import "${home-manager}/nixos")
