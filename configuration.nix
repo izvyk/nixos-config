@@ -1168,19 +1168,25 @@ in
   # Dynamically allocate the physical swapfile ONLY during hibernation lifecycles.
   # The swapfile is completely invisible to the kernel during normal runtime.
   systemd.services.systemd-hibernate.serviceConfig = {
-    ExecStartPre = "-${pkgs.util-linux}/bin/swapon /swap/swapfile";
-    ExecStopPost = "-${pkgs.util-linux}/bin/swapoff /swap/swapfile";
+    ExecStartPre = "${pkgs.util-linux}/bin/swapon /swap/swapfile";
+    ExecStopPost = "${pkgs.util-linux}/bin/swapoff /swap/swapfile";
   };
 
   systemd.services.systemd-suspend-then-hibernate.serviceConfig = {
-    ExecStartPre = "-${pkgs.util-linux}/bin/swapon /swap/swapfile";
-    ExecStopPost = "-${pkgs.util-linux}/bin/swapoff /swap/swapfile";
+    ExecStartPre = "${pkgs.util-linux}/bin/swapon /swap/swapfile";
+    ExecStopPost = "${pkgs.util-linux}/bin/swapoff /swap/swapfile";
   };
 
   systemd.services.systemd-logind = {
     environment = {
       SYSTEMD_BYPASS_HIBERNATION_MEMORY_CHECK = "1";
     };
+  };
+  services.logind.settings.Login = {
+    HandleLidSwitch = "suspend-then-hibernate";
+    # lidSwitchDocked = "ignore";
+    HandleLidSwitchExternalPower = "suspend-then-hibernate";
+    # HandleSuspendKey = "suspend-then-hibernate";
   };
 
   # environment.etc."systemd/system-sleep/swap-for-hibernate" = {
@@ -1214,7 +1220,8 @@ in
   systemd.sleep.settings.Sleep = {
     AllowSuspendThenHibernate = "yes";
     HibernateOnACPower = "yes";
-    HibernateDelaySec = "30m";
+    HibernateDelaySec = "2h";
+    HibernateMode = "shutdown";
   };
 
   # powerManagement.powertop.enable = true;
