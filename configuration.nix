@@ -25,26 +25,6 @@ let
     ];
   };
 
-  # 2. We define the script as a package.
-  # "writeShellApplication" is superior to "writeShellScriptBin" because
-  # it runs ShellCheck on build and handles PATH automatically.
-  ocr-script = pkgs.writeShellApplication {
-    name = "ocr-selection";
-    runtimeInputs = [
-      pkgs.grim
-      pkgs.slurp
-      pkgs.imagemagick
-      pkgs.wl-clipboard
-      tesseract-ocr
-    ];
-    text = ''
-      # The pipeline: Select -> Process -> OCR -> Clipboard
-      grim -g "$(slurp)" - | \
-        magick - -auto-level -normalize -enhance -sharpen 0x1 -resize 200% - | \
-        tesseract - - -l rus+eng+deu quiet | \
-        wl-copy
-    '';
-  };
   sharedMain = {
     # capslock = "escape";
     capslock = "overload(control, escape)";
@@ -125,14 +105,12 @@ in
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
+    ./gnome.nix
     ./dock-mode.nix
 
     # <home-manager/nixos>
     (import "${home-manager}/nixos")
 
-    # 2. Import the DMS module directly from the downloaded tarball path
-    # "${unstable-src}/nixos/modules/programs/wayland/dms-shell.nix"
-    "${unstable-src}/nixos/modules/programs/wayland/niri.nix"
     # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
     # "${unstable-src}/nixos/modules/services/system/nohang.nix"
     # "${unstable-src}/nixos/modules/services/hardware/logiops.nix"
@@ -144,7 +122,6 @@ in
 
   # This tells NixOS to skip loading its default versions of these modules
   disabledModules = [
-    "programs/wayland/niri.nix"
     # "programs/wayland/mangowc.nix"
     # "services/hardware/logiops.nix"
     # "services/hardware/keyd.nix"
@@ -163,11 +140,32 @@ in
       networkmanager-openvpn
     ];
   };
-  systemd.services.NetworkManager-wait-online.enable = false;
+
+  networking.wireless.iwd = {
+    enable = true;
+    settings = {
+      General.AddressRandomization = "network";
+      Network = {
+        EnableIPv6 = true;
+        RoutePriorityOffset = 300;
+      };
+      Settings = {
+        AutoConnect = true;
+      };
+    };
+  };
+
+  # systemd.services.NetworkManager-wait-online.enable = false;
   services.avahi.enable = false;
   systemd.services.ModemManager.enable = false;
-  systemd.services.tailscaled.serviceConfig.Type = lib.mkForce "simple";
+  # systemd.services.tailscaled.serviceConfig.Type = lib.mkForce "simple";
   systemd.services.libvirtd.wantedBy = lib.mkForce [ ]; # no autostart but keep socket activation
+
+  systemd.services.systemd-user-sessions.unitConfig.After = [
+    "remote-fs.target"
+    "nss-user-lookup.target"
+    "home.mount"
+  ];
 
   # Set your time zone.
   # time.timeZone = "Europe/Amsterdam";
@@ -207,13 +205,6 @@ in
   #   keyMap = "us";
   #   useXkbConfig = true; # use xkb.options in tty.
   # };
-
-  # Enable the X11 windowing system.
-  ### services.xserver.enable = true;
-
-  # Enable the GNOME Desktop Environment.
-  ### services.xserver.displayManager.gdm.enable = true;
-  ### services.xserver.desktopManager.gnome.enable = true;
 
   # nixpkgs = {
   #   overlays = [
@@ -274,11 +265,22 @@ in
         x11.enable = true; # Keep this true even on Wayland; many XWayland apps (like Electron) need it
       };
 
+      # GTK3/GTK4 cursor config for XWayland apps
+      gtk = {
+        enable = true;
+        cursorTheme = {
+          name = "Bibata-Modern-Classic";
+          package = pkgs.bibata-cursors;
+          size = 24;
+        };
+      };
+
       # 1. Your user-specific packages go here!
       home.packages = with pkgs; [
         # firefox
         # foot # enabled as a service
-        # unstable.ghostty
+        unstable.ghostty
+        unstable.kitty
         # unstable.warp-terminal
         # unstable.nushell
         # yandex-music
@@ -313,42 +315,24 @@ in
         libreoffice
         # zoom-us
 
-        # waybar
-        # kdePackages.kdeconnect-kde
-        awww
-        killall
-        # cliphist
-        wl-gammarelay-rs
-        # rofi
-        # python3Minimal
-        # jq
-        # pulseaudio
-        # swayimg
+        unstable.swayimg
         unstable.libheif
         parallel
         unstable.imagemagickBig
         # unzip
-        libnotify
-        # grim
-        # unstable.flameshot
         dotool
-        ocr-script
+        tesseract-ocr
+        zbar
+        trash-cli
+        pulseaudio
 
-        # unstable.noctalia-shell
-        # unstable.quickshell # The underlying framework Noctalia runs on
-        # unstable.brightnessctl
-        # unstable.cliphist
-        # unstable.wlsunset
         qt6.qtwayland
         kdePackages.qttools
         fd
 
-        # unstable.vicinae
-        # unstable.contour
         chezmoi
-        # alacritty
         delta
-        tmux
+        easyeffects
 
         unstable.devenv
         gocryptfs
@@ -357,22 +341,19 @@ in
         unstable.tuxguitar
       ];
 
-      # 2. Your foot config from earlier
       programs.foot = {
         enable = true;
-        # server.enable = true;
+        server.enable = true;
       };
-      # Declaratively enable the upstream socket by mimicking 'systemctl enable'
-      xdg.configFile."systemd/user/sockets.target.wants/foot-server.socket".source =
-        "${pkgs.foot}/share/systemd/user/foot-server.socket";
 
-      # programs.dms-shell = {
-      #   enable = true;
-      #
-      #   # Notice we use `pkgs.unstable` here because of your packageOverrides
-      #   package = pkgs.unstable.dms;
-      #   quickshell.package = pkgs.unstable.quickshell;
-      # };
+      programs.vicinae = {
+        enable = true;
+        systemd = {
+          enable = true;
+          autoStart = true;
+          target = "graphical-session.target";
+        };
+      };
 
       # This value determines the Home Manager release that your configuration is
       # compatible with. This helps avoid breakage when a new Home Manager release
@@ -383,10 +364,6 @@ in
       # release notes.
       home.stateVersion = "25.11"; # Please read the comment before changing.
     };
-  programs.niri = {
-    enable = true;
-    package = pkgs.unstable.niri;
-  };
 
   age.secrets."btrbk-ssh-key" = {
     file = ./secrets/btrbk-ssh-key.age;
@@ -428,10 +405,7 @@ in
   #   withUWSM = true;
   #   xwayland.enable = false;
   # };
-  # programs.hyprlock.enable = false;
-  # services.hypridle.enable = false;
 
-  # programs.firefox.enable = true;
   programs.firefox = {
     enable = true;
 
@@ -594,168 +568,21 @@ in
   };
 
   services.xserver.enable = false;
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
 
-  services.gnome.core-apps.enable = false;
-  services.gnome.core-developer-tools.enable = false;
-  services.gnome.games.enable = false;
-  environment.gnome.excludePackages = with pkgs; [
-    gnome-tour
-    gnome-user-docs
-  ];
-  services.gnome.sushi.enable = true;
-  services.gnome.gnome-online-accounts.enable = true;
-  # services.gnome.gnome-keyring.enable = lib.mkDefault false;
+  xdg.terminal-exec = {
+    enable = true;
+    settings = {
+      GNOME = [ "com.mitchellh.ghostty.desktop" ];
+      default = [ "com.mitchellh.ghostty.desktop" ];
+    };
+  };
 
-  # services.fprintd.enable = true;
-
-  programs.dconf.profiles.user.databases = [
-    {
-      lockAll = true; # prevents overriding
-      settings = {
-        "org/gnome/desktop/input-sources" = {
-          # xkb-options = [
-          #   "caps:escape_shifted_capslock"
-          #   "ctrl:swap_lalt_lctl"
-          # ];
-          sources = [
-            (lib.gvariant.mkTuple [
-              "xkb"
-              "us+izvyk"
-            ])
-            (lib.gvariant.mkTuple [
-              "xkb"
-              "ru+izvyk"
-            ])
-          ];
-        };
-        "org/gnome/mutter" = {
-          experimental-features = [
-            "scale-monitor-framebuffer" # Enables fractional scaling (125% 150% 175%)
-            "variable-refresh-rate" # Enables Variable Refresh Rate (VRR) on compatible displays
-            "xwayland-native-scaling" # Scales Xwayland applications to look crisp on HiDPI screens
-          ];
-          workspaces-only-on-primary = false;
-        };
-        "org/gnome/desktop/interface" = {
-          show-battery-percentage = true;
-          clock-show-seconds = true;
-        };
-        "org/gnome/settings-daemon/plugins/power".power-button-action = "nothing";
-        "org/gnome/shell/app-switcher".current-workspace-only = true;
-        # "org/gnome/desktop/break-reminders".selected-breaks = [
-        #   "eyesight"
-        #   "movement"
-        # ];
-        # "org/gnome/desktop/break-reminders/movement" = {
-        #   interval-seconds = lib.gvariant.mkUint32 3600;
-        #   play-sound = false;
-        # };
-        "org/gnome/desktop/screensaver".lock-delay = lib.gvariant.mkUint32 30;
-        "system/locale".region = "de_DE.UTF-8";
-        "org/gnome/desktop/privacy" = {
-          remove-old-trash-files = true;
-          remove-old-temp-files = true;
-          recent-files-max-age = lib.gvariant.mkInt32 30;
-        };
-        "org/gnome/desktop/wm/preferences/button-layout".appmenu = [
-          "minimize"
-          "close"
-        ];
-
-        "org/gnome/desktop/wm/keybindings".cycle-windows = [ "<Control>grave" ];
-        "org/gnome/desktop/wm/keybindings".cycle-windows-backward = [ "<Shift><Control>grave" ];
-        "org/gnome/desktop/wm/keybindings".switch-windows = [ "<Control>Tab" ];
-        "org/gnome/desktop/wm/keybindings".switch-windows-backward = [ "<Shift><Control>Tab" ];
-        "org/gnome/desktop/wm/keybindings".close = [ "<Super>q" ];
-
-
-	# To avoid confusions when switching between iqunix keyboard and laptop keyboard
-        "org/gnome/desktop/wm/keybindings".maximize = [ "<Super>k" ];
-        "org/gnome/desktop/wm/keybindings".unmaximize = [ "<Super>j" ];
-        "org/gnome/mutter/keybindings".toggle-tiled-left = [ "<Super>h" ];
-        "org/gnome/mutter/keybindings".toggle-tiled-right = [ "<Super>l" ];
-        "org/gnome/desktop/wm/keybindings".minimize = [ "<Super>m" ];
-	"org/gnome/settings-daemon/plugins/media-keys".screensaver = [ "<Super>semicolon" ];
-	"org/gnome/mutter".overlay-key = [ "<Super>o" ];
-
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".binding = "<Super>Return";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".command = "footclient";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0".name = "Terminal";
-
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".binding = "Launch5";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".command = "/home/izvyk/.local/bin/volume-down";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1".name = "Volume down F14";
-
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".binding = "Launch6";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".command = "/home/izvyk/.local/bin/volume-up";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2".name = "Volume up F15";
-
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".binding = "Launch7";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".command = "/home/izvyk/.local/bin/brightness-down";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3".name = "Brightness down F16";
-
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".binding = "Launch8";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".command = "/home/izvyk/.local/bin/brightness-up";
-        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4".name = "Brightness up F17";
-
-        "org/gnome/settings-daemon/plugins/media-keys".custom-keybindings = [
-          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
-          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
-          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
-          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
-          "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
-        ];
-
-        # "org/gnome/shell/keybindings".screenshot = "Insert";
-        # "org/gnome/shell/keybindings".show-screenshot-ui = "<Shift>Insert";
-        # "org/gnome/shell/keybindings".screenshot-window = "<Control>Insert";
-
-        "org/gnome/desktop/wm/preferences".focus-mode = "sloppy";
-
-        "org/gnome/desktop/interface".enable-hot-corners = false;
-
-        # "org/gnome/shell/extensions/simplebreakreminder".time-between-breaks = lib.gvariant.mkUint32 60;
-
-        # "org/gnome/shell/extensions/display-brightness-ddcutil".show-all-slider = true;
-        # "org/gnome/shell/extensions/display-brightness-ddcutil".show-sliders-in-submenu = true;
-
-        "org/gnome/shell/extensions/clipboard-indicator".excluded-apps = [
-          "org.keepassxc.KeePassXC"
-        ];
-
-        # "org/gnome/shell/extensions/just-perfection".search = false;
-        "org/gnome/shell/extensions/just-perfection".top-panel-position = lib.gvariant.mkInt32 1;
-        "org/gnome/shell/extensions/just-perfection".dash = false;
-        "org/gnome/shell/extensions/just-perfection".activities-button = false;
-
-        "org/gnome/desktop/interface".accent-color = "teal";
-        "org/gnome/settings-daemon/plugins/color".night-light-enabled = true;
-
-        "org/gnome/shell" = {
-          disable-user-extensions = false;
-          disable-extension-version-validation = true;
-
-          # disabled-extensions = [];
-
-          enabled-extensions = [
-            # "gnomeExtensions.paperwm"
-            "caffeine@patapon.info"
-            "clipboard-indicator@tudmotu.com"
-            "disconnect-wifi@kgshank.net"
-            # "display-brightness-ddcutil@themightydeity.github.com"
-            "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com"
-            "gsconnect@andyholmes.github.io"
-            # "simplebreakreminder@castillodel.com"
-            "middleclickclose@paolo.tranquilli.gmail.com"
-            "panel-corners@aunetx"
-            "just-perfection-desktop@just-perfection"
-          ];
-        };
-      };
-    }
-  ];
+  xdg.mime = {
+    enable = true;
+    defaultApplications = {
+      "application/pdf" = [ "firefox.desktop" ];
+    };
+  };
 
   programs.fish.enable = true;
   # Tell direnv to hook into your fish shell
@@ -766,7 +593,6 @@ in
     "/share/nix-direnv"
   ];
   environment.systemPackages = with pkgs; [
-    #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
     #   wget
     linux-firmware
     neovim
@@ -788,18 +614,6 @@ in
 
     # dae
 
-    # gnomeExtensions.paperwm
-    gnomeExtensions.caffeine
-    gnomeExtensions.brightness-control-using-ddcutil
-    gnomeExtensions.clipboard-indicator
-    gnomeExtensions.disconnect-wifi
-    gnomeExtensions.do-not-disturb-while-screen-sharing-or-recording
-    gnomeExtensions.gsconnect
-    gnomeExtensions.panel-corners
-    gnomeExtensions.just-perfection
-    gnomeExtensions.middle-click-to-close-in-overview
-    # gnomeExtensions.simple-break-reminder
-
     agenix
 
     gst_all_1.gstreamer
@@ -809,29 +623,15 @@ in
     gst_all_1.gst-plugins-ugly
     gst_all_1.gst-libav
 
-    easyeffects
+    tmux
     android-tools
   ];
 
-  programs.kdeconnect = {
-    enable = true;
     package = pkgs.gnomeExtensions.gsconnect;
   };
+    man-pages-posix # Optional, but highly recommended for standard POSIX API docs
+  ];
 
-  # services.keyd = {
-  #   enable = true;
-  #   keyboards = {
-  #     default = {
-  #       ids = [ "*" ];
-  #       settings = {
-  #         main = {
-  #           leftcontrol = "layer(alt)";
-  #           leftalt = "layer(control)";
-  #         };
-  #       };
-  #     };
-  #   };
-  # };
 
   hardware.uinput.enable = true;
 
@@ -1167,22 +967,6 @@ in
   # Enable touchpad support (enabled default in most desktopManager).
   # services.libinput.enable = true;
 
-  # Define a user account. Don't forget to set a password with ‘passwd’.
-  # users.users.alice = {
-  #   isNormalUser = true;
-  #   extraGroups = [ "wheel" ]; # Enable ‘sudo’ for the user.
-  #   packages = with pkgs; [
-  #     tree
-  #   ];
-  # };
-
-  # List packages installed in system profile.
-  # You can use https://search.nixos.org/ to find more packages (and options).
-  # environment.systemPackages = with pkgs; [
-  #   vim # Do not forget to add an editor to edit configuration.nix! The Nano editor is also installed by default.
-  #   wget
-  # ];
-
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -1192,9 +976,6 @@ in
   # };
 
   # List services that you want to enable:
-
-  # Enable the OpenSSH daemon.
-  # services.openssh.enable = true;
 
   # services.dae = {
   #   enable = true;
@@ -1377,7 +1158,6 @@ in
   services.nohang = {
     enable = true;
     # package = pkgs.unstable.nohang;
-    # enableDesktopNotifications = true; # is implied in NixOS when enable = true for nohang package
   };
 
   zramSwap = {
@@ -1602,5 +1382,4 @@ in
   #
   # For more information, see `man configuration.nix` or https://nixos.org/manual/nixos/stable/options#opt-system.stateVersion .
   system.stateVersion = "25.05"; # Did you read the comment?
-
 }
