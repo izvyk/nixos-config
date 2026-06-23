@@ -625,13 +625,9 @@ in
 
     tmux
     android-tools
-  ];
 
-    package = pkgs.gnomeExtensions.gsconnect;
-  };
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
   ];
-
 
   hardware.uinput.enable = true;
 
