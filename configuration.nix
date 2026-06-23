@@ -26,7 +26,6 @@ let
   };
 
   sharedMain = {
-    # capslock = "escape";
     capslock = "overload(control, escape)";
 
     leftcontrol = "layer(alt)";
