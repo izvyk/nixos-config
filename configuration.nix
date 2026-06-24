@@ -13,7 +13,6 @@ let
   # 1. Fetch the unstable tarball and assign its path to a variable
   unstable-src = fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
-
 in
 {
   imports = [
@@ -26,19 +25,14 @@ in
 
     # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
     # "${unstable-src}/nixos/modules/services/system/nohang.nix"
-    # "${unstable-src}/nixos/modules/services/hardware/logiops.nix"
-    # "${unstable-src}/nixos/modules/services/hardware/keyd.nix"
 
-    # Age module from agenix-src
     "${agenix-src}/modules/age.nix"
   ];
 
   # This tells NixOS to skip loading its default versions of these modules
-  disabledModules = [
-    # "programs/wayland/mangowc.nix"
-    # "services/hardware/logiops.nix"
-    # "services/hardware/keyd.nix"
-  ];
+  # disabledModules = [
+  #   # "programs/wayland/mangowc.nix"
+  # ];
 
   networking.hostName = "NixPC";
   # Pick only one of the below networking options.
@@ -160,7 +154,6 @@ in
     ];
 
   };
-
 
   age.secrets."btrbk-ssh-key" = {
     file = ./secrets/btrbk-ssh-key.age;
@@ -390,7 +383,6 @@ in
     "/share/nix-direnv"
   ];
   environment.systemPackages = with pkgs; [
-    #   wget
     linux-firmware
     bat
     btop
@@ -425,12 +417,13 @@ in
   ];
 
   programs.neovim = {
-  hardware.uinput.enable = true;
     enable = true;
     defaultEditor = true;
     viAlias = true;
     vimAlias = true;
   };
+
+  hardware.uinput.enable = true;
 
   services.udisks2.settings = {
     "mount_options.conf" = {
@@ -496,7 +489,6 @@ in
   programs.ssh.knownHosts."github.com".publicKey =
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
 
-  # In /etc/nixos/configuration.nix
   programs.git = {
     enable = true;
 
