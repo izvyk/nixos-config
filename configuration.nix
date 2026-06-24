@@ -301,8 +301,8 @@ in
         # quickshell
         # yandex-music
         unstable.zed-editor
-        unstable.opencode
-        unstable.pi-coding-agent
+        # unstable.opencode
+        # unstable.pi-coding-agent
         unstable.gemini-cli-bin
         unstable.antigravity
         lazygit
@@ -601,10 +601,6 @@ in
     file
     nixfmt
     ddcutil
-
-    nautilus
-    gparted
-    exfat
 
     cryptsetup
 
