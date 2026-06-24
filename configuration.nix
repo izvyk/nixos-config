@@ -522,7 +522,6 @@ in
   environment.systemPackages = with pkgs; [
     #   wget
     linux-firmware
-    neovim
     bat
     btop
     zoxide
@@ -555,8 +554,12 @@ in
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
   ];
 
+  programs.neovim = {
   hardware.uinput.enable = true;
     enable = true;
+    defaultEditor = true;
+    viAlias = true;
+    vimAlias = true;
   };
 
   services.udisks2.settings = {
