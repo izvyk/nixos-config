@@ -214,6 +214,9 @@ in
         gnomeExtensions.middle-click-to-close-in-overview
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
+
+	nautilus
+        file-roller # Adds extraction support back to Nautilus
       ];
     };
   services.displayManager.gdm.enable = true;
