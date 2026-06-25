@@ -76,7 +76,8 @@ in
         # unstable.warp-terminal
         # unstable.nushell
         # yandex-music
-        kdePackages.filelight
+        # kdePackages.filelight
+	baobab
         # materialgram
         # telegram-desktop
         keepassxc
