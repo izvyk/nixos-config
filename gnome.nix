@@ -67,8 +67,8 @@ in
           minimize = [ "<Super>m" ];
         };
         "org/gnome/shell/keybindings" = {
-          screenshot = "Print";
-          show-screenshot-ui = "<Shift>Print";
+          screenshot = [ "Print" ];
+          show-screenshot-ui = [ "<Shift>Print" ];
         };
 
         "org/gnome/settings-daemon/plugins/media-keys" = {
