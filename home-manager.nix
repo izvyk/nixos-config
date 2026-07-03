@@ -107,6 +107,7 @@ in
         chromium
         libreoffice
         # zoom-us
+        libnotify
 
         unstable.swayimg
         unstable.libheif
