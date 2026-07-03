@@ -215,10 +215,10 @@ in
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
 
-	nautilus
+        nautilus
         file-roller # Adds extraction support back to Nautilus
-	gnome-calculator
-	gnome-calendar
+        gnome-calculator
+        gnome-calendar
       ];
     };
   services.displayManager.gdm.enable = true;
