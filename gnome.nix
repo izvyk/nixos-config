@@ -162,6 +162,7 @@ in
             "shotzy@SamkitJain660.github.io"
             # "copyous@boerdereinar.dev"
             "vicinae@dagimg-dot"
+            "keyboard-reset@galets"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {
@@ -214,6 +215,7 @@ in
         gnomeExtensions.middle-click-to-close-in-overview
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
+        gnomeExtensions.keyboard-reset
 
         nautilus
         file-roller # Adds extraction support back to Nautilus
