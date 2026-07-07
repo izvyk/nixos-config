@@ -11,7 +11,7 @@
 
 let
   # 1. Fetch the unstable tarball and assign its path to a variable
-  unstable-src = fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
+  # unstable-src = fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
 {
@@ -290,12 +290,15 @@ in
     packageOverrides =
       pkgs:
       let
-        unstablePkgs = import unstable-src {
-          config = config.nixpkgs.config;
-        };
+        # unstablePkgs = import unstable-src {
+        #   config = config.nixpkgs.config;
+        # };
       in
       {
-        unstable = unstablePkgs;
+        # unstable = unstablePkgs;
+        unstable = import <nixpkgs-unstable> {
+          config = pkgs.config;
+        };
 
         # THE FIX: This goes inside the curly braces of the packageOverrides block
         # dgop = unstablePkgs.dgop;
