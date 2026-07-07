@@ -652,6 +652,12 @@ in
     enable = true;
     # package = pkgs.unstable.nohang;
   };
+  # Inject sudo shim into the systemd service environment
+  systemd.services.nohang.path = [
+    (pkgs.writeShellScriptBin "sudo" ''
+      exec ${pkgs.doas}/bin/doas "$@"
+    '')
+  ];
 
   zramSwap = {
     enable = true;
