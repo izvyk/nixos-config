@@ -631,15 +631,10 @@ in
     extraRules = [
       {
         groups = [ "wheel" ];
-        # keepEnv = true;
         persist = true;
-        # Explicitly whitelist ONLY what is safe and necessary
         setEnv = [
+	  "-SSH_AUTH_SOCK" # doas.nix module adds this by default. We don't want user's SSH agent to leak into root's environment
           "COLORTERM"
-          "TERM"
-          "EDITOR"
-          "PAGER"
-          # "SSH_AUTH_SOCK" # Uncomment if you need user SSH keys as root
         ];
       }
       # {
