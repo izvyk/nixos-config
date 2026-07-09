@@ -37,7 +37,6 @@ in
     <home-manager/nixos>
   ];
 
-
   # 2. Tell Home Manager to use the global system packages
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
@@ -75,7 +74,7 @@ in
         # unstable.nushell
         # yandex-music
         # kdePackages.filelight
-	baobab
+        baobab
         # materialgram
         # telegram-desktop
         keepassxc
@@ -131,6 +130,7 @@ in
         vaults
         obsidian
         unstable.tuxguitar
+	gnome-podcasts
 
         # snapshotScript
       ];
