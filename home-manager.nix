@@ -6,7 +6,6 @@
 }:
 
 let
-  home-manager = fetchTarball "https://github.com/nix-community/home-manager/archive/release-26.05.tar.gz";
   # 1. We create a custom Tesseract instance with exactly the languages you need.
   # This avoids global bloat and ensures the data is present for this script.
   tesseract-ocr = pkgs.tesseract.override {
@@ -35,8 +34,7 @@ let
 in
 {
   imports = [
-    # <home-manager/nixos>
-    (import "${home-manager}/nixos")
+    <home-manager/nixos>
   ];
 
 
