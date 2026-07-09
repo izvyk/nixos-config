@@ -636,7 +636,7 @@ in
         groups = [ "wheel" ];
         persist = true;
         setEnv = [
-	  "-SSH_AUTH_SOCK" # doas.nix module adds this by default. We don't want user's SSH agent to leak into root's environment
+          "-SSH_AUTH_SOCK" # doas.nix module adds this by default. We don't want user's SSH agent to leak into root's environment
           "COLORTERM"
         ];
       }
