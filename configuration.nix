@@ -788,6 +788,9 @@ in
     kernel.sysctl = {
       # SysRq: enable F R E I S U B
       "kernel.sysrq" = 244;
+      "kernel.softlockup_panic" = 1; # panic on soft lockup, not just log it
+      "kernel.panic" = 10; # auto-reboot 10s after any panic
+      "kernel.panic_on_oops" = 1; # panic on detected memory corruption
 
       "net.ipv4.tcp_congestion_control" = "bbr";
       "net.core.default_qdisc" = "fq";
