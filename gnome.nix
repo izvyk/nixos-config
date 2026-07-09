@@ -6,11 +6,57 @@
 }:
 
 let
+  lockInterceptorSrc = builtins.fetchGit {
+    url = "https://github.com/izvyk/lock-monitor.git";
+    rev = "3ccdb5d1c11b34eac4f422b1e717b81ce0b55cb3";
+  };
 in
 {
+
   home-manager.users.izvyk =
     { pkgs, ... }:
     {
+      imports = [
+        "${lockInterceptorSrc}/lock-monitor.nix"
+      ];
+
+      services.lock-monitor =
+        let
+          caffeineStateFile = "/tmp/.caffeine-was-enabled-${config.home-manager.users.izvyk.home.username}";
+        in
+        {
+          enable = true;
+
+          lockScript = ''
+            # ${pkgs.playerctl}/bin/playerctl pause
+
+            # Save the caffeine state
+            ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
+
+            if [ "$(${pkgs.dconf}/bin/dconf read /org/gnome/shell/extensions/caffeine/cli-toggle)" = "true" ]; then
+              ${pkgs.coreutils}/bin/touch "${caffeineStateFile}"
+            fi
+            ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle false
+
+            # Reset keyboard layout
+            ${pkgs.glib}/bin/gdbus call --session --dest org.gnome.Shell \
+                                        --object-path /dev/galets/gkr \
+                                        --method dev.galets.gkr.reset
+          '';
+
+          unlockScript = ''
+            # ${pkgs.playerctl}/bin/playerctl play
+
+            ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
+
+            # Restore the caffeine state
+            if [ -f "${caffeineStateFile}" ]; then
+              ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
+              ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
+            fi
+          '';
+        };
+
       # Explicit dconf entries - GNOME Wayland reads these
       dconf.settings = {
         "org/gnome/desktop/input-sources" = {
