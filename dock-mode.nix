@@ -68,11 +68,16 @@ let
       verb = "authorize";
     };
   };
+
+  dockInterceptorSrc = builtins.fetchGit {
+    url = "https://github.com/izvyk/dock-monitor.git";
+    rev = "62e078a64909610d69abf7d321bb22744fdbefa3";
+  };
 in
 {
   home-manager.users.${targetUser} = {
     imports = [
-      /home/izvyk/Projects/dock-monitor/dock-monitor.nix
+      "${dockInterceptorSrc}/dock-monitor.nix"
     ];
 
     services.dock-monitor = {

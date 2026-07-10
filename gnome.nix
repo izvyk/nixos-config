@@ -8,7 +8,7 @@
 let
   lockInterceptorSrc = builtins.fetchGit {
     url = "https://github.com/izvyk/lock-monitor.git";
-    rev = "3ccdb5d1c11b34eac4f422b1e717b81ce0b55cb3";
+    rev = "99623650eaae4e6f9b49834f62cff00d76c159de";
   };
 in
 {
