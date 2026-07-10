@@ -1,11 +1,15 @@
-{ config, pkgs, ... }:
+{
+  config,
+  pkgs,
+  lib,
+  ...
+}:
 
 let
   targetUser = "izvyk";
   cameraUsbId = "1-4";
   audioPciId = "0000:03:00.6";
-
-  uid = toString config.users.users.${targetUser}.uid;
+  authFile = "/sys/bus/usb/devices/${cameraUsbId}/authorized";
 
   reserveWrapper = pkgs.writeShellScriptBin "audio-reserve-wrapper" ''
     set -eu
@@ -20,87 +24,75 @@ let
     exec ${pkgs.pipewire}/bin/pw-reserve -n "Audio$CARD_NUM" -r
   '';
 
+  # Minimal, hardcoded, privileged-only writers - nothing else runs as root
+  camWriteOff = pkgs.writeShellScriptBin "cam-write-off" ''
+    ${pkgs.coreutils}/bin/echo 0 > ${authFile}
+  '';
+
+  camWriteOn = pkgs.writeShellScriptBin "cam-write-on" ''
+    ${pkgs.coreutils}/bin/echo 1 > ${authFile}
+  '';
+
   camOff = pkgs.writeShellScriptBin "cam-unauthorize" ''
-    if [ -e /sys/bus/usb/devices/${cameraUsbId}/authorized ]; then
-      ${pkgs.coreutils}/bin/echo 0 > /sys/bus/usb/devices/${cameraUsbId}/authorized \
+    if [ -e ${authFile} ]; then
+      /run/wrappers/bin/doas ${camWriteOff}/bin/cam-write-off \
         && ${pkgs.util-linux}/bin/logger -t dock-manager "camera unauthorized" \
         || ${pkgs.util-linux}/bin/logger -t dock-manager "camera unauthorize failed"
     fi
   '';
 
   camOn = pkgs.writeShellScriptBin "cam-authorize" ''
-    if [ -e /sys/bus/usb/devices/${cameraUsbId}/authorized ]; then
-      ${pkgs.coreutils}/bin/echo 1 > /sys/bus/usb/devices/${cameraUsbId}/authorized \
+    if [ -e ${authFile} ]; then
+      /run/wrappers/bin/doas ${camWriteOn}/bin/cam-write-on \
         && ${pkgs.util-linux}/bin/logger -t dock-manager "camera authorized" \
         || ${pkgs.util-linux}/bin/logger -t dock-manager "camera authorize failed"
     fi
   '';
-
-  evalScript = pkgs.writeShellScriptBin "dock-evaluate" ''
-    set -eu
-    export PATH="${
-      pkgs.lib.makeBinPath [
-        pkgs.coreutils
-        pkgs.gnugrep
-        pkgs.systemd
-	pkgs.util-linux
-      ]
-    }:$PATH"
-
-    if [ ! -S "/run/user/${uid}/bus" ]; then
-      logger -t dock-manager "session bus not ready, skipping evaluation"
-      exit 0
-    fi
-
-    LID_STATE=$(grep -iq "closed" /proc/acpi/button/lid/*/state && echo closed || echo open)
-    EXT_MONITOR=$(grep -l "^connected$" /sys/class/drm/card*-*/status 2>/dev/null | grep -v eDP | wc -l)
-
-    if [ "$LID_STATE" = "closed" ] && [ "$EXT_MONITOR" -gt 0 ]; then
-      systemctl start dock-mode.service
-    else
-      systemctl stop dock-mode.service
-    fi
-  '';
 in
 {
-  systemd.services."dock-mode" = {
-    description = "Dock mode: disable internal camera/speakers when docked with lid closed";
-    after = [ "graphical.target" ];
-    unitConfig = {
-      ConditionPathExists = "/run/user/${uid}/bus";
-      StartLimitIntervalSec = "30";
-      StartLimitBurst = "5";
-    };
-    serviceConfig = {
-      Type = "simple";
-      User = targetUser;
-      Environment = "XDG_RUNTIME_DIR=/run/user/${uid}";
-      ExecStartPre = "!${camOff}/bin/cam-unauthorize";
-      ExecStart = "${reserveWrapper}/bin/audio-reserve-wrapper";
-      ExecStopPost = "!${camOn}/bin/cam-authorize";
-      Restart = "on-failure";
-      RestartSec = "1";
-    };
-  };
+  home-manager.users.${targetUser} = {
+    imports = [
+      /home/izvyk/Projects/dock-monitor/dock-monitor.nix
+    ];
 
-  systemd.services."dock-evaluate" = {
-    description = "Re-evaluate dock state on lid/DRM change";
-    serviceConfig = {
-      Type = "oneshot";
-      ExecStart = "${evalScript}/bin/dock-evaluate";
+    services.dock-monitor = {
+      enable = true;
+      dockModeUnit = "dock-mode.service";
     };
-  };
 
-  # ACPI trigger for the physical lid switch
-  services.acpid = {
-    enable = true;
-    handlers = {
-      lid-change = {
-        event = "button/lid.*";
-        action = "${evalScript}/bin/dock-evaluate";
+    systemd.user.services.dock-mode = {
+      Unit = {
+        Description = "Dock mode: reserve laptop speakers&mic, unauthorize internal camera";
+        # No After/BindsTo on graphical-session.target here -
+        # this unit is purely reactive, started/stopped by dock-evaluate.
       };
+      Service = {
+        Type = "simple";
+        ExecStartPre = "${camOff}/bin/cam-unauthorize";
+        ExecStart = "${reserveWrapper}/bin/audio-reserve-wrapper";
+        ExecStopPost = "${camOn}/bin/cam-authorize";
+        Restart = "on-failure";
+        RestartSec = "1";
+      };
+      # Deliberately no Install section - never auto-started at boot,
+      # only ever via `systemctl --user start/stop dock-mode.service`.
     };
   };
+
+  security.doas.extraRules = lib.mkAfter [
+    {
+      users = [ "${targetUser}" ];
+      cmd = "${camWriteOff}/bin/cam-write-off";
+      args = [ ];
+      noPass = true;
+    }
+    {
+      users = [ "${targetUser}" ];
+      cmd = "${camWriteOn}/bin/cam-write-on";
+      args = [ ];
+      noPass = true;
+    }
+  ];
 
   # Stable device name
   services.udev.extraRules = ''
