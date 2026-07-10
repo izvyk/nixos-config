@@ -11,43 +11,63 @@ let
   audioPciId = "0000:03:00.6";
   authFile = "/sys/bus/usb/devices/${cameraUsbId}/authorized";
 
-  reserveWrapper = pkgs.writeShellScriptBin "audio-reserve-wrapper" ''
-    set -eu
-    CARD_NUM=$(${pkgs.gawk}/bin/awk -F'[][]' '/LaptopAudio/ {print $1}' /proc/asound/cards | ${pkgs.coreutils}/bin/tr -d ' ')
+  dockLog = msg: ''${pkgs.util-linux}/bin/logger -t dock-mode "${msg}"'';
 
-    if [ -z "$CARD_NUM" ]; then
-      ${pkgs.util-linux}/bin/logger -t dock-manager "could not resolve card number for ${audioPciId}"
-      exit 1
-    fi
+  reserveWrapper = pkgs.writeShellApplication {
+    name = "audio-reserve-wrapper";
+    text = ''
+      CARD_NUM=$(${pkgs.gawk}/bin/awk -F'[][]' '/LaptopAudio/ {print $1}' /proc/asound/cards | ${pkgs.coreutils}/bin/tr -d ' ')
 
-    ${pkgs.util-linux}/bin/logger -t dock-manager "reserving Audio$CARD_NUM"
-    exec ${pkgs.pipewire}/bin/pw-reserve -n "Audio$CARD_NUM" -r
-  '';
+      if [ -z "$CARD_NUM" ]; then
+        ${dockLog "could not resolve card number for ${audioPciId}"}
+        exit 1
+      fi
 
-  # Minimal, hardcoded, privileged-only writers - nothing else runs as root
-  camWriteOff = pkgs.writeShellScriptBin "cam-write-off" ''
-    ${pkgs.coreutils}/bin/echo 0 > ${authFile}
-  '';
+      ${dockLog "reserving Audio$CARD_NUM..."}
+      exec ${pkgs.pipewire}/bin/pw-reserve -n "Audio$CARD_NUM" -r
+    '';
+  };
 
-  camWriteOn = pkgs.writeShellScriptBin "cam-write-on" ''
-    ${pkgs.coreutils}/bin/echo 1 > ${authFile}
-  '';
+  # Builds a { writer, wrapper } pair for one camera-auth transition.
+  # writer: minimal, hardcoded, root-only script (the only thing doas ever runs)
+  # wrapper: unprivileged script - checks, elevates writer, logs as the real user
+  mkCamAction =
+    { value, verb }:
+    let
+      writer = pkgs.writeShellScriptBin "cam-write-${value}" ''
+        ${pkgs.coreutils}/bin/echo ${value} > ${authFile}
+      '';
 
-  camOff = pkgs.writeShellScriptBin "cam-unauthorize" ''
-    if [ -e ${authFile} ]; then
-      /run/wrappers/bin/doas ${camWriteOff}/bin/cam-write-off \
-        && ${pkgs.util-linux}/bin/logger -t dock-manager "camera unauthorized" \
-        || ${pkgs.util-linux}/bin/logger -t dock-manager "camera unauthorize failed"
-    fi
-  '';
+      wrapper = pkgs.writeShellApplication {
+        name = "cam-${verb}";
+        text = ''
+          if [ ! -e ${authFile} ]; then
+            ${dockLog "camera under ${authFile} not found, skipping"}
+            exit 0
+          fi
 
-  camOn = pkgs.writeShellScriptBin "cam-authorize" ''
-    if [ -e ${authFile} ]; then
-      /run/wrappers/bin/doas ${camWriteOn}/bin/cam-write-on \
-        && ${pkgs.util-linux}/bin/logger -t dock-manager "camera authorized" \
-        || ${pkgs.util-linux}/bin/logger -t dock-manager "camera authorize failed"
-    fi
-  '';
+          if /run/wrappers/bin/doas ${writer}/bin/cam-write-${value}; then
+            ${dockLog "camera ${verb}d"}
+          else
+            ${dockLog "camera ${verb} failed"}
+          fi
+        '';
+      };
+    in
+    {
+      inherit writer wrapper;
+    };
+
+  camActions = {
+    off = mkCamAction {
+      value = "0";
+      verb = "unauthorize";
+    };
+    on = mkCamAction {
+      value = "1";
+      verb = "authorize";
+    };
+  };
 in
 {
   home-manager.users.${targetUser} = {
@@ -68,31 +88,28 @@ in
       };
       Service = {
         Type = "simple";
-        ExecStartPre = "${camOff}/bin/cam-unauthorize";
-        ExecStart = "${reserveWrapper}/bin/audio-reserve-wrapper";
-        ExecStopPost = "${camOn}/bin/cam-authorize";
+        ExecStartPre = "!${lib.getExe camActions.off.wrapper}";
+        ExecStart = lib.getExe reserveWrapper;
+        ExecStopPost = "!${lib.getExe camActions.on.wrapper}";
         Restart = "on-failure";
         RestartSec = "1";
+
+        ProtectHome = true;
+        NoNewPrivileges = true;
       };
       # Deliberately no Install section - never auto-started at boot,
       # only ever via `systemctl --user start/stop dock-mode.service`.
     };
   };
 
-  security.doas.extraRules = lib.mkAfter [
-    {
-      users = [ "${targetUser}" ];
-      cmd = "${camWriteOff}/bin/cam-write-off";
+  security.doas.extraRules = lib.mkAfter (
+    map (action: {
+      users = [ targetUser ];
+      cmd = lib.getExe action.writer;
       args = [ ];
       noPass = true;
-    }
-    {
-      users = [ "${targetUser}" ];
-      cmd = "${camWriteOn}/bin/cam-write-on";
-      args = [ ];
-      noPass = true;
-    }
-  ];
+    }) (lib.attrValues camActions)
+  );
 
   # Stable device name
   services.udev.extraRules = ''
