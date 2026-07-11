@@ -99,7 +99,6 @@ in
         Restart = "on-failure";
         RestartSec = "1";
 
-        ProtectHome = true;
         NoNewPrivileges = true;
       };
       # Deliberately no Install section - never auto-started at boot,
