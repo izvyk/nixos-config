@@ -42,7 +42,6 @@ in
 
       home.packages = with pkgs; [
         waybar
-        kdePackages.kdeconnect-kde
         awww
         killall
         cliphist
@@ -52,7 +51,7 @@ in
         jq
         pulseaudio
         grim
-        ocr-script
+        # ocr-script
         hypridle
         # unstable.noctalia-shell
         # unstable.quickshell # The underlying framework Noctalia runs on
@@ -92,7 +91,6 @@ in
           After = [ "niri.service" ];
         };
         Service = {
-          # You MUST keep this block so systemd knows what to run
           ExecStart = "${pkgs.hypridle}/bin/hypridle";
           Restart = "on-failure";
         };

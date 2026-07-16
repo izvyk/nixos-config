@@ -131,7 +131,7 @@ in
         vaults
         obsidian
         unstable.tuxguitar
-	gnome-podcasts
+        gnome-podcasts
 
         # snapshotScript
       ];
