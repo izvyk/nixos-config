@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  username,
   ...
 }:
 
@@ -13,7 +14,7 @@ let
 in
 {
 
-  home-manager.users.izvyk =
+  home-manager.users.${username} =
     { pkgs, ... }:
     {
       imports = [
@@ -22,7 +23,7 @@ in
 
       services.lock-monitor =
         let
-          caffeineStateFile = "/tmp/.caffeine-was-enabled-${config.home-manager.users.izvyk.home.username}";
+          caffeineStateFile = "/tmp/.caffeine-was-enabled-${username}";
         in
         {
           enable = true;
@@ -138,25 +139,25 @@ in
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
           binding = "Launch5";
-          command = "/home/izvyk/.local/bin/volume-down";
+          command = "/home/${username}/.local/bin/volume-down";
           name = "Volume down F14";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
           binding = "Launch6";
-          command = "/home/izvyk/.local/bin/volume-up";
+          command = "/home/${username}/.local/bin/volume-up";
           name = "Volume up F15";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
           binding = "Launch7";
-          command = "/home/izvyk/.local/bin/brightness-down";
+          command = "/home/${username}/.local/bin/brightness-down";
           name = "Brightness down F16";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
           binding = "Launch8";
-          command = "/home/izvyk/.local/bin/brightness-up";
+          command = "/home/${username}/.local/bin/brightness-up";
           name = "Brightness up F17";
         };
 

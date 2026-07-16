@@ -2,11 +2,11 @@
   config,
   pkgs,
   lib,
+  username,
   ...
 }:
 
 let
-  targetUser = "izvyk";
   cameraUsbId = "1-4";
   audioPciId = "0000:03:00.6";
   authFile = "/sys/bus/usb/devices/${cameraUsbId}/authorized";
@@ -75,7 +75,7 @@ let
   };
 in
 {
-  home-manager.users.${targetUser} = {
+  home-manager.users.${username} = {
     imports = [
       "${dockInterceptorSrc}/dock-monitor.nix"
     ];
@@ -108,7 +108,7 @@ in
 
   security.doas.extraRules = lib.mkAfter (
     map (action: {
-      users = [ targetUser ];
+      users = [ username ];
       cmd = lib.getExe action.writer;
       args = [ ];
       noPass = true;

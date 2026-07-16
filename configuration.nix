@@ -6,6 +6,7 @@
   config,
   lib,
   pkgs,
+  username,
   ...
 }:
 
@@ -15,6 +16,8 @@ let
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
 {
+  _module.args.username = "izvyk";
+
   imports = [
     # Include the results of the hardware scan.
     ./hardware-configuration.nix
@@ -106,8 +109,9 @@ in
   users.groups.battery = { };
   users.groups.power_profile = { };
 
-  users.users.izvyk = {
+  users.users.${username} = {
     isNormalUser = true;
+    uid = 1000;
     shell = pkgs.fish;
     extraGroups = [
       "wheel"
@@ -325,7 +329,7 @@ in
     trusted-public-keys = [ "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=" ];
     trusted-users = [
       "root"
-      "izvyk"
+      # "${username}"
     ];
   };
 
@@ -496,10 +500,10 @@ in
   # # environment.etc = {
   # #   "Yubico/u2f_keys" = {
   # #     text = ''
-  # #       izvyk:SYTl2m5FtwjzACS0rNJrPMf3NWNPvaql5u/4tzkhplp3MLRzzMhNL9LNssTB0Pxv1LI/8wZEG9Fli8lupEdCxg==,ptIzQnICwLd3CvGkaX5oIvRZxdZvH+j8wR1e1VzBuPvDbNoY8lOdeZuVUYzQgszhZTK+0ucJQ2byYIZLwD3E9Q==,es256,+presence:58m/39fqoOc0Iw+wONKDD9/twmvZHBCnYfrkCFuBrw2Ah5SbhaPvGvXmsNWStl11QemD7BIB4lPPiUzX6S3mDw==,++0tTVCPHQYUEfH7C15Q1EKvDchmOM6GVXI2KyZJA03wUMB6gkdTqhHhWUXX5ky5sy5aHldRmFvUE8CVaOTKYg==,es256,+presence:fPbiT2tGPgsWnUc/3Wv8gCH6OkiPcNQJ6baSJnD93yisiMYW7Z46YN9P0kSkcF9x+n2qTMOyPio5cabtlgLZaQ==,dFNN5D/qLUox3+l3lYqLaNQPA0qC/bmRPGr1dV2nCv/kYnpc+kjQ5kodQcFLxWhVWTnmlobtggmG2Qm+cIilUQ==,es256,+presence
+  # #       ${username}:SYTl2m5FtwjzACS0rNJrPMf3NWNPvaql5u/4tzkhplp3MLRzzMhNL9LNssTB0Pxv1LI/8wZEG9Fli8lupEdCxg==,ptIzQnICwLd3CvGkaX5oIvRZxdZvH+j8wR1e1VzBuPvDbNoY8lOdeZuVUYzQgszhZTK+0ucJQ2byYIZLwD3E9Q==,es256,+presence:58m/39fqoOc0Iw+wONKDD9/twmvZHBCnYfrkCFuBrw2Ah5SbhaPvGvXmsNWStl11QemD7BIB4lPPiUzX6S3mDw==,++0tTVCPHQYUEfH7C15Q1EKvDchmOM6GVXI2KyZJA03wUMB6gkdTqhHhWUXX5ky5sy5aHldRmFvUE8CVaOTKYg==,es256,+presence:fPbiT2tGPgsWnUc/3Wv8gCH6OkiPcNQJ6baSJnD93yisiMYW7Z46YN9P0kSkcF9x+n2qTMOyPio5cabtlgLZaQ==,dFNN5D/qLUox3+l3lYqLaNQPA0qC/bmRPGr1dV2nCv/kYnpc+kjQ5kodQcFLxWhVWTnmlobtggmG2Qm+cIilUQ==,es256,+presence
   # #     '';
   # #     # text = ''
-  # #     #   izvyk:sXVlvPJmpEtdynu1ayCHrRcv2nCGwNJB7JqcW3sS4Vs0p4qPlSkjQ9k06fpzN3+1vjZ8/tSJ9w/2l1uKF1X7cA==,nANpkTMqHfIkqhTpxyF+O1O7DjhR797tOHQrcQbHobDGUFyv7OKrimOaaTY7epmc4fvdGUrcDwg3LCLy22r1yw==,es256,+presence
+  # #     #   ${username}:sXVlvPJmpEtdynu1ayCHrRcv2nCGwNJB7JqcW3sS4Vs0p4qPlSkjQ9k06fpzN3+1vjZ8/tSJ9w/2l1uKF1X7cA==,nANpkTMqHfIkqhTpxyF+O1O7DjhR797tOHQrcQbHobDGUFyv7OKrimOaaTY7epmc4fvdGUrcDwg3LCLy22r1yw==,es256,+presence
   #     # '';
   #     mode = "0600";
   #   };
@@ -527,26 +531,25 @@ in
 
   services.syncthing = {
     enable = true;
-    user = "izvyk";
+    user = username;
     group = "users";
-    dataDir = "/home/izvyk"; # Default folder for new synced folders
-    configDir = "/home/izvyk/.config/syncthing"; # Folder for Syncthing's settings and keys
+    dataDir = "/home/${username}"; # Default folder for new synced folders
+    configDir = "/home/${username}/.config/syncthing"; # Folder for Syncthing's settings and keys
     cert = config.age.secrets."syncthing-cert".path;
     key = config.age.secrets."syncthing-key".path;
   };
 
   age.secrets."syncthing-cert" = {
     file = ./secrets/syncthing-cert.age;
-    owner = "izvyk";
+    owner = username;
     group = "users";
   };
 
   age.secrets."syncthing-key" = {
     file = ./secrets/syncthing-key.age;
-    owner = "izvyk";
+    owner = username;
     group = "users";
   };
-
 
   services.upower.enable = true;
 
@@ -642,7 +645,7 @@ in
       }
       # {
       #   noPass = true;
-      #   users = [ "izvyk" ];
+      #   users = [ username ];
       #   cmd = "${snapshotScript}/bin/agent-snapshot";
       # }
     ];

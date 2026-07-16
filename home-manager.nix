@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  username,
   ...
 }:
 
@@ -41,7 +42,7 @@ in
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
 
-  home-manager.users.izvyk =
+  home-manager.users.${username} =
     { pkgs, ... }:
     {
       # home.stateVersion = "25.11";

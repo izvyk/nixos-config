@@ -2,6 +2,7 @@
   config,
   lib,
   pkgs,
+  username,
   ...
 }:
 
@@ -35,7 +36,7 @@ in
   disabledModules = [
     # "programs/wayland/niri.nix"
   ];
-  home-manager.users.izvyk =
+  home-manager.users.${username} =
     { pkgs, ... }:
     {
 

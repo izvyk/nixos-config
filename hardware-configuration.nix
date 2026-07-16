@@ -6,6 +6,7 @@
   lib,
   pkgs,
   modulesPath,
+  username,
   ...
 }:
 
@@ -172,10 +173,10 @@
   # Declaratively enforce directory ownership and permissions at boot.
   # This maintains strict privilege separation without requiring imperative execution.
   systemd.tmpfiles.rules = [
-    "d /mnt/data 0755 izvyk users - -"
-    "d /mnt/hdd 0755 izvyk users - -"
-    "d /mnt/netac 0755 izvyk users - -"
-    "d /mnt/masterdata 0755 izvyk users - -"
+    "d /mnt/data 0755 ${username} users - -"
+    "d /mnt/hdd 0755 ${username} users - -"
+    "d /mnt/netac 0755 ${username} users - -"
+    "d /mnt/masterdata 0755 ${username} users - -"
   ];
 
   fileSystems."/swap" = {
