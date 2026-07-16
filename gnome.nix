@@ -14,6 +14,30 @@ let
 in
 {
 
+  # imports = [
+  # ];
+
+  services.displayManager.gdm.enable = true;
+  services.desktopManager.gnome.enable = true;
+
+  services.gnome.core-apps.enable = false;
+  services.gnome.core-developer-tools.enable = false;
+  services.gnome.games.enable = false;
+  services.gnome.sushi.enable = true;
+  services.gnome.gnome-online-accounts.enable = true;
+  # services.gnome.gnome-keyring.enable = lib.mkDefault false;
+
+  programs.dconf.profiles.user.databases = [
+    {
+      lockAll = true; # prevents overriding
+    }
+  ];
+
+  programs.kdeconnect = {
+    enable = true;
+    package = pkgs.gnomeExtensions.gsconnect;
+  };
+
   home-manager.users.${username} =
     { pkgs, ... }:
     {
@@ -270,24 +294,4 @@ in
         gnome-calendar
       ];
     };
-  services.displayManager.gdm.enable = true;
-  services.desktopManager.gnome.enable = true;
-
-  services.gnome.core-apps.enable = false;
-  services.gnome.core-developer-tools.enable = false;
-  services.gnome.games.enable = false;
-  services.gnome.sushi.enable = true;
-  services.gnome.gnome-online-accounts.enable = true;
-  # services.gnome.gnome-keyring.enable = lib.mkDefault false;
-
-  programs.dconf.profiles.user.databases = [
-    {
-      lockAll = true; # prevents overriding
-    }
-  ];
-
-  programs.kdeconnect = {
-    enable = true;
-    package = pkgs.gnomeExtensions.gsconnect;
-  };
 }
