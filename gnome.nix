@@ -140,6 +140,7 @@ in
         "org/gnome/shell/keybindings" = {
           screenshot = [ "Print" ];
           show-screenshot-ui = [ "<Shift>Print" ];
+          toggle-application-view = [ ];
         };
 
         "org/gnome/settings-daemon/plugins/media-keys" = {
@@ -242,6 +243,10 @@ in
           top-panel-position = 1;
           window-demands-attention-focus = true;
           quick-settings-airplane-mode = false;
+          search = false;
+          window-preview-close-button = false;
+          window-preview-caption = false;
+          double-super-to-appgrid = false;
         };
 
         "org/gnome/shell/extensions/color-picker" = {
