@@ -235,6 +235,7 @@ in
             # "copyous@boerdereinar.dev"
             "vicinae@dagimg-dot"
             "keyboard-reset@galets"
+            "touchpad-gesture-customization@coooolapps.com"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {
@@ -269,6 +270,13 @@ in
         };
         "org/gnome/settings-daemon/plugins/power".power-button-action = "nothing";
 
+        "org/gnome/shell/extensions/touchpad-gesture-customization" = {
+          pinch-4-finger-gesture = "NONE";
+          horizontal-swipe-3-fingers-gesture = "VOLUME_CONTROL";
+          vertical-swipe-4-fingers-gesture = "OVERVIEW_NAVIGATION";
+          pinch-3-finger-gesture = "CLOSE_WINDOW";
+          volume-control-speed = 0.75;
+        };
       };
 
       # 1. Your user-specific packages go here!
@@ -292,6 +300,7 @@ in
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
         gnomeExtensions.keyboard-reset
+        gnomeExtensions.touchpad-gesture-customization
 
         nautilus
         file-roller # Adds extraction support back to Nautilus
