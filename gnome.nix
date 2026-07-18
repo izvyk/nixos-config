@@ -236,6 +236,7 @@ in
             "vicinae@dagimg-dot"
             "keyboard-reset@galets"
             "touchpad-gesture-customization@coooolapps.com"
+            "rounded-window-corners@fxgn"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {
@@ -277,6 +278,46 @@ in
           pinch-3-finger-gesture = "CLOSE_WINDOW";
           volume-control-speed = 0.75;
         };
+
+        "org/gnome/shell/extensions/rounded-window-corners-reborn" =
+          let
+            inherit (lib.gvariant)
+              mkUint32
+              mkTuple
+              mkVariant
+              mkArray
+              mkDictionaryEntry
+              ;
+          in
+          {
+            global-rounded-corner-settings = mkArray [
+              (mkDictionaryEntry "padding" (
+                mkVariant (mkArray [
+                  (mkDictionaryEntry "left" (mkVariant (mkUint32 1)))
+                  (mkDictionaryEntry "right" (mkVariant (mkUint32 1)))
+                  (mkDictionaryEntry "top" (mkVariant (mkUint32 1)))
+                  (mkDictionaryEntry "bottom" (mkVariant (mkUint32 1)))
+                ])
+              ))
+              (mkDictionaryEntry "keepRoundedCorners" (
+                mkVariant (mkArray [
+                  (mkDictionaryEntry "maximized" (mkVariant false))
+                  (mkDictionaryEntry "fullscreen" (mkVariant false))
+                ])
+              ))
+              (mkDictionaryEntry "borderRadius" (mkVariant (mkUint32 11)))
+              (mkDictionaryEntry "smoothing" (mkVariant 0.0))
+              (mkDictionaryEntry "borderColor" (
+                mkVariant (mkTuple [
+                  0.5
+                  0.5
+                  0.5
+                  1.0
+                ])
+              ))
+              (mkDictionaryEntry "enabled" (mkVariant true))
+            ];
+          };
       };
 
       # 1. Your user-specific packages go here!
@@ -301,6 +342,7 @@ in
         gnomeExtensions.vicinae
         gnomeExtensions.keyboard-reset
         gnomeExtensions.touchpad-gesture-customization
+        gnomeExtensions.rounded-window-corners-reborn
 
         nautilus
         file-roller # Adds extraction support back to Nautilus
