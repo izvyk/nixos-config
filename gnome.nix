@@ -275,7 +275,7 @@ in
           pinch-4-finger-gesture = "NONE";
           horizontal-swipe-3-fingers-gesture = "VOLUME_CONTROL";
           vertical-swipe-4-fingers-gesture = "OVERVIEW_NAVIGATION";
-          pinch-3-finger-gesture = "CLOSE_WINDOW";
+          pinch-3-finger-gesture = "NONE";
           volume-control-speed = 0.75;
         };
 
@@ -293,10 +293,10 @@ in
             global-rounded-corner-settings = mkArray [
               (mkDictionaryEntry "padding" (
                 mkVariant (mkArray [
-                  (mkDictionaryEntry "left" (mkVariant (mkUint32 1)))
-                  (mkDictionaryEntry "right" (mkVariant (mkUint32 1)))
-                  (mkDictionaryEntry "top" (mkVariant (mkUint32 1)))
-                  (mkDictionaryEntry "bottom" (mkVariant (mkUint32 1)))
+                  (mkDictionaryEntry "left" (mkVariant (mkUint32 0)))
+                  (mkDictionaryEntry "right" (mkVariant (mkUint32 0)))
+                  (mkDictionaryEntry "top" (mkVariant (mkUint32 0)))
+                  (mkDictionaryEntry "bottom" (mkVariant (mkUint32 0)))
                 ])
               ))
               (mkDictionaryEntry "keepRoundedCorners" (
@@ -305,7 +305,7 @@ in
                   (mkDictionaryEntry "fullscreen" (mkVariant false))
                 ])
               ))
-              (mkDictionaryEntry "borderRadius" (mkVariant (mkUint32 11)))
+              (mkDictionaryEntry "borderRadius" (mkVariant (mkUint32 7)))
               (mkDictionaryEntry "smoothing" (mkVariant 0.0))
               (mkDictionaryEntry "borderColor" (
                 mkVariant (mkTuple [
