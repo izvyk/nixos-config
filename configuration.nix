@@ -11,15 +11,12 @@
 }:
 
 let
-  # 1. Fetch the unstable tarball and assign its path to a variable
-  # unstable-src = fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz";
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
 {
   _module.args.username = "izvyk";
 
   imports = [
-    # Include the results of the hardware scan.
     ./hardware-configuration.nix
     ./gnome.nix
     ./dock-mode.nix
@@ -46,13 +43,7 @@ in
     "home.mount"
   ];
 
-  # Set your time zone.
-  # time.timeZone = "Europe/Amsterdam";
   time.timeZone = "Europe/Berlin";
-
-  # Configure network proxy if necessary
-  # networking.proxy.default = "http://user:password@proxy:port/";
-  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
 
   # Select internationalisation properties.
   i18n = {
@@ -158,17 +149,6 @@ in
     };
   };
 
-  # programs.mangowc = {
-  #   enable = true;
-  #   package = pkgs.unstable.mangowc;
-  # };
-
-  # programs.hyprland = {
-  #   enable = false;
-  #   withUWSM = true;
-  #   xwayland.enable = false;
-  # };
-
   programs.firefox = {
     enable = true;
 
@@ -268,38 +248,11 @@ in
     #  };
   };
 
-  # nixpkgs.config.allowBroken = true;
-  # Allow unstable packages.
-  # nixpkgs.config = {
-  #   allowUnfree = true;
-  #   packageOverrides = pkgs: {
-  #     unstable = import <nixpkgs-unstable> {
-  #       config = config.nixpkgs.config;
-  #     };
-  #   };
-  # };
-
-  # Allow unstable packages without relying on local nix-channel state
-  # nixpkgs.config = {
-  #   allowUnfree = true;
-  #   packageOverrides = pkgs: {
-  #     unstable = import (fetchTarball "https://github.com/NixOS/nixpkgs/archive/nixos-unstable.tar.gz") {
-  #       config = config.nixpkgs.config;
-  #     };
-  #   };
-  # };
-
   nixpkgs.config = {
     allowUnfree = true;
     packageOverrides =
       pkgs:
-      let
-        # unstablePkgs = import unstable-src {
-        #   config = config.nixpkgs.config;
-        # };
-      in
       {
-        # unstable = unstablePkgs;
         unstable = import <nixpkgs-unstable> {
           config = pkgs.config;
         };
@@ -372,8 +325,6 @@ in
     direnv
     nix-direnv
 
-    # dae
-
     agenix
 
     gst_all_1.gstreamer
@@ -405,9 +356,6 @@ in
     "mount_options.conf" = {
       defaults = {
         defaults = "noatime,noexec";
-        # Example: Extra defaults specifically for BTRFS removable drives
-        # btrfs_defaults = "noatime,compress=zstd";
-
         vfat_defaults = "noatime,noexec";
         exfat_defaults = "noatime,noexec";
         ntfs_defaults = "noatime,noexec";
@@ -526,7 +474,6 @@ in
   services.gvfs.enable = true;
   programs.fuse.userAllowOther = true;
 
-  # Age secrets configuration for syncthing
   age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
   services.syncthing = {
@@ -555,16 +502,6 @@ in
 
   services.geoclue2.enable = true;
 
-  # Configure keymap in X11
-  # services.xserver.xkb.layout = "us";
-  # services.xserver.xkb.options = "eurosign:e,caps:escape";
-
-  # Enable CUPS to print documents.
-  # services.printing.enable = true;
-
-  # Enable sound.
-  # services.pulseaudio.enable = true;
-  # OR
   services.pipewire = {
     enable = true;
     alsa.enable = true;
@@ -603,9 +540,6 @@ in
 
   programs.virt-manager.enable = true;
 
-  # Enable touchpad support (enabled default in most desktopManager).
-  # services.libinput.enable = true;
-
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
   # programs.mtr.enable = true;
@@ -613,8 +547,6 @@ in
   #   enable = true;
   #   enableSSHSupport = true;
   # };
-
-  # List services that you want to enable:
 
   hardware.bluetooth = {
     enable = true;
@@ -694,23 +626,7 @@ in
     # HandleSuspendKey = "suspend-then-hibernate";
   };
 
-  # environment.etc."systemd/system-sleep/swap-for-hibernate" = {
-  #   text = ''
-  #     #!/bin/sh
-  #     echo $1/$2
-  #     case "$1/$2" in
-  #       pre/hibernate|pre/hybrid-sleep)
-  # 	/run/current-system/sw/bin/swapon /swap/swapfile
-  # 	;;
-  #       post/hibernate|post/hybrid-sleep)
-  # 	/run/current-system/sw/bin/swapoff /swap/swapfile
-  # 	;;
-  #     esac
-  #   '';
-  #   mode = "0755";
-  # };
-
-  # Limit nix rebuilds priority.  When left on the default is uses all available resources which can make the system unusable
+  # Limit nix rebuilds priority. When left on the default is uses all available resources which can make the system unusable
   nix = {
     settings.cores = 6;
     # daemonCPUSchedPolicy = "idle";
@@ -733,13 +649,9 @@ in
   powerManagement.enable = true;
   # powerManagement.cpuFrequencyGovernor = "powersave";
 
-  # Enable auto-upgrades.
   system.autoUpgrade = {
     enable = false;
-    # Run daily
     dates = "daily";
-    # Build the new config and make it the default, but don't switch yet.  This will be picked up on reboot.  This helps
-    # prevent issues with OpenSnitch configs not well matching the state of the system.
     operation = "boot";
   };
 
@@ -868,7 +780,6 @@ in
       "iwlwifi.power_save=1"
       "iwlmvm.power_scheme=3"
       "nmi_watchdog=0"
-      "tsc=unstable"
     ];
   };
 

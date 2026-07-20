@@ -53,6 +53,10 @@ in
   programs.ssh.knownHosts."github.com".publicKey =
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
 
+  # Configure network proxy if necessary
+  # networking.proxy.default = "http://user:password@proxy:port/";
+  # networking.proxy.noProxy = "127.0.0.1,localhost,internal.domain";
+
   # services.dae = {
   #   enable = true;
   #   # Point to a file outside the Nix store to keep your V2Ray key secret
