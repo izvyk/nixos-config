@@ -24,7 +24,6 @@ in
     ./input.nix
     ./home-manager.nix
     ./network.nix
-    # ./nixvim.nix
     ./neovim.nix
 
     # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
