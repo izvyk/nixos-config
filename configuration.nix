@@ -24,6 +24,8 @@ in
     ./input.nix
     ./home-manager.nix
     ./network.nix
+    # ./nixvim.nix
+    ./neovim.nix
 
     # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
     # "${unstable-src}/nixos/modules/services/system/nohang.nix"
@@ -338,12 +340,6 @@ in
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
   ];
 
-  programs.neovim = {
-    enable = true;
-    defaultEditor = true;
-    viAlias = true;
-    vimAlias = true;
-  };
 
   hardware.uinput.enable = true;
 

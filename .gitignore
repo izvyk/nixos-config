@@ -22,6 +22,9 @@
 !README.md
 !LICENSE
 
+# Allow lua files
+!*.lua
+
 # ==========================================
 # 3. EXPLICIT RE-DENY (Overrides Allow)
 # ==========================================
