@@ -6,15 +6,16 @@
   config,
   lib,
   pkgs,
-  username,
   ...
 }:
 
 let
+  username = "izvyk";
+
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
 {
-  _module.args.username = "izvyk";
+  _module.args.username = username;
 
   imports = [
     ./hardware-configuration.nix
@@ -250,26 +251,19 @@ in
 
   nixpkgs.config = {
     allowUnfree = true;
-    packageOverrides =
-      pkgs:
-      {
-        unstable = import <nixpkgs-unstable> {
-          config = pkgs.config;
-        };
-
-        # THE FIX: This goes inside the curly braces of the packageOverrides block
-        # dgop = unstablePkgs.dgop;
-
-        # Inject agenix from the downloaded tarball directly into the pkgs namespace
-        # agenix = (import agenix-src { inherit pkgs; }).agenix;
-
-        # Wrapped to automatically use the system identity key to avoid manually typing --identity
-        agenix = pkgs.writeShellScriptBin "agenix" ''
-          exec ${
-            (import agenix-src { inherit pkgs; }).agenix
-          }/bin/agenix -i /etc/ssh/ssh_host_ed25519_key "$@"
-        '';
+    packageOverrides = pkgs: {
+      unstable = import <nixpkgs-unstable> {
+        config = pkgs.config;
       };
+      # agenix = (import agenix-src { inherit pkgs; }).agenix;
+
+      # Wrapped to automatically use the system identity key to avoid manually typing --identity
+      agenix = pkgs.writeShellScriptBin "agenix" ''
+        exec ${
+          (import agenix-src { inherit pkgs; }).agenix
+        }/bin/agenix -i /etc/ssh/ssh_host_ed25519_key "$@"
+      '';
+    };
   };
   nix.settings = {
     auto-optimise-store = true;
@@ -278,6 +272,7 @@ in
       "flakes"
     ];
 
+    tarball-ttl = 86400;
     substituters = [ "https://devenv.cachix.org" ];
     trusted-public-keys = [ "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=" ];
     trusted-users = [
