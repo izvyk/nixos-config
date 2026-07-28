@@ -466,7 +466,7 @@ in
       # (iosevka-bin.override { variant = "Etoile"; }) # Смотрится по-технически, как советская инструкция, напечатанная на машинке
 
       # Monospace
-      iosevka-bin # Идеален дял терминала, прекрасен во всём
+      (iosevka-bin.override { variant = "Curly"; }) # Идеален дял терминала, прекрасен во всём. Пробую Curly-вариант
       # nerd-fonts.iosevka
 
       # Emoji
