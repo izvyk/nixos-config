@@ -117,6 +117,7 @@ in
         zbar
         trash-cli
         pulseaudio
+        ddcutil
 
         qt6.qtwayland
         kdePackages.qttools

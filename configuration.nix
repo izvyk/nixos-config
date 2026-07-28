@@ -313,7 +313,6 @@ in
     zoxide
     file
     nixfmt
-    ddcutil
 
     cryptsetup
 
@@ -337,7 +336,6 @@ in
     man-pages # Provides Linux programmer's manual
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
   ];
-
 
   hardware.uinput.enable = true;
 
