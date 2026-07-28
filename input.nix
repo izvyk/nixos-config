@@ -1,11 +1,28 @@
 {
-  config,
   lib,
   pkgs,
   ...
 }:
 
 let
+  tapHold =
+    {
+      key,
+      timeout ? 250,
+      heldAction,
+    }:
+    {
+      "${key}" = "timeout(macro2(-1, 0, ${key}), ${toString timeout}ms, macro2(-1, 0, ${heldAction}))";
+    };
+
+  F23Lock =
+    key:
+    tapHold {
+      key = key;
+      timeout = 400;
+      heldAction = "f23";
+    }; # BUG: fires on release instead of firing on timeout expiration if the mouse pointer is moving
+
   sharedMain = {
     capslock = "overload(control, escape)";
 
@@ -14,29 +31,17 @@ let
 
     rightalt = "overload(altgr, macro(leftmeta+space))";
 
-    sysrq = "timeout(macro2(-1, 0, sysrq), 250ms, macro2(-1, 0, S-sysrq))";
-
     space = "overloadt(space_layer, space, 300)";
 
-    # leftmeta = "overload(meta, macro2(-1, 0, M-o))";
-    #
-    # ### MOUSE
-    #
-    # # Thumb button
-    # # "f20" = "overload(thumb_layer, layer(meta))";
-    # "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
-    #
-    # # Normal scroll wheel
-    # "f18" = "scrollup";
-    # "f19" = "scrolldown";
-    #
-    # # player controls on back/forward
-    # "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, previoussong))";
-    # "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, nextsong))";
-    #
-    # # Right mouse key as a layer trigger
-    # "rightmouse" = "overload(rightmouse_layer, rightmouse)";
-  };
+    # a = "timeout(w, 250ms, macro2(-1, 0, q))";
+    # a = "timeout(macro2(0, 0, w), 250ms, macro2(0, 0, q))"; # BUG: q is typed exactly twice
+  }
+  // tapHold {
+    key = "sysrq";
+    heldAction = "S-sysrq";
+  }
+  // F23Lock "escape";
+
   sharedSpaceLayer = {
     # Developer Additions: Vim navigation
     h = "left";
@@ -49,37 +54,71 @@ let
     m = "delete";
   };
 
-  # thumbLayerA = {
-  #   # classic zoom
-  #   "leftmouse" = "C-minus";
-  #   "rightmouse" = "C-equal";
-  #   "leftmouse+rightmouse" = "C-0";
-  #
-  #   # WARNING: This still works, it just doesn't need to be here!
-  #   # touchpad-style zoom (e.g. in browsers)
-  #   # "f18" = "scrollup";
-  #   # "f19" = "scrolldown";
-  #
-  #   # misc
-  #   "middlemouse" = "f5";
-  #   # "playpause" = "nextsong";
-  #
-  #   # "rightmouse" = "overload(horizontalscroll_layer, C-equal)";
-  #   # "leftmouse" = "overload(zoom_reset_left_layer, C-minus)";
-  #   # "rightmouse" = "overload(zoom_reset_right_layer, C-equal)";
-  # };
-  #
-  # rightmouseLayer = {
-  #   # horizontal scroll for the main wheel
-  #   "f18" = "scrollleft";
-  #   "f19" = "scrollright";
-  #
-  #   # Brightness for thumb wheel
-  #   "f14" = "f16";
-  #   "f15" = "f17";
-  #
-  #   "middlemouse" = "f5";
-  # };
+  sharedCtrlShiftLayer = {
+    "[" = "C-pageup";
+    "]" = "C-pagedown";
+  };
+
+  numberRowToF = [
+    {
+      key = "1";
+      f = "f1";
+    }
+    {
+      key = "2";
+      f = "f2";
+    }
+    {
+      key = "3";
+      f = "f3";
+    }
+    {
+      key = "4";
+      f = "f4";
+    }
+    {
+      key = "5";
+      f = "f5";
+    }
+    {
+      key = "6";
+      f = "f6";
+    }
+    {
+      key = "7";
+      f = "f7";
+    }
+    {
+      key = "8";
+      f = "f8";
+    }
+    {
+      key = "9";
+      f = "f9";
+    }
+    {
+      key = "0";
+      f = "f10";
+    }
+    {
+      key = "minus";
+      f = "f11";
+    }
+    {
+      key = "equal";
+      f = "f12";
+    }
+  ];
+
+  fKeyBindings = lib.mergeAttrsList (
+    map (
+      p:
+      tapHold {
+        key = p.key;
+        heldAction = p.f;
+      }
+    ) numberRowToF
+  );
 in
 {
   services.keyd = {
@@ -100,9 +139,7 @@ in
         settings = {
           main = sharedMain;
           space_layer = sharedSpaceLayer;
-
-          # "thumb_layer:A" = thumbLayerA;
-          # "rightmouse_layer" = rightmouseLayer;
+          "control+shift" = sharedCtrlShiftLayer;
         };
       };
 
@@ -116,21 +153,24 @@ in
           main = {
             # Thumb button
             "f20" = "overload(thumb_layer, layer(meta))";
-            # "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
 
             # Normal scroll wheel
             "f18" = "scrollup";
             "f19" = "scrolldown";
 
-            # player controls on back/forward
-            "mouse1" = "timeout(macro2(-1, 0, mouse1), 400ms, macro2(-1, 0, previoussong))";
-            "mouse2" = "timeout(macro2(-1, 0, mouse2), 400ms, macro2(-1, 0, nextsong))";
-
             # Right mouse key as a layer trigger
             "rightmouse" = "overload(rightmouse_layer, rightmouse)";
-
-            # Probably destructive
-            # "leftmouse+rightmouse" = "f5";
+          }
+          # player controls on back/forward
+          // tapHold {
+            key = "mouse1";
+            timeout = 400;
+            heldAction = "previoussong";
+          }
+          // tapHold {
+            key = "mouse2";
+            timeout = 400;
+            heldAction = "nextsong";
           };
 
           "thumb_layer:A" = {
@@ -146,11 +186,6 @@ in
 
             # misc
             "middlemouse" = "f5";
-            # "playpause" = "nextsong";
-
-            # "rightmouse" = "overload(horizontalscroll_layer, C-equal)";
-            # "leftmouse" = "overload(zoom_reset_left_layer, C-minus)";
-            # "rightmouse" = "overload(zoom_reset_right_layer, C-equal)";
           };
 
           "rightmouse_layer" = {
@@ -175,9 +210,16 @@ in
           "320f:5088"
         ];
         settings = {
-          main = sharedMain // {
-            home = "timeout(macro2(-1, 0, home), 250ms, macro2(-1, 0, f24))";
-          };
+          main =
+            sharedMain
+            # // tapHold {
+            #   key = "home";
+            #   heldAction = "f24";
+            # }
+            // F23Lock "`"
+            // fKeyBindings;
+
+          "control+shift" = sharedCtrlShiftLayer;
 
           space_layer = sharedSpaceLayer // {
             "1" = "brightnessdown";
@@ -189,15 +231,11 @@ in
             "-" = "volumedown";
             "equal" = "volumeup";
           };
-
-          # "thumb_layer:A" = thumbLayerA;
-          # "rightmouse_layer" = rightmouseLayer;
         };
       };
     };
   };
 
-  # Enable logid
   services.logiops = {
     enable = true;
     # package = pkgs.unstable.logiops;
