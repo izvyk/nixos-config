@@ -26,6 +26,7 @@ in
     ./network.nix
     ./neovim.nix
 
+    <nixpkgs-unstable/nixos/modules/config/fonts/fontconfig.nix>
     # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
     # "${unstable-src}/nixos/modules/services/system/nohang.nix"
 
@@ -33,9 +34,9 @@ in
   ];
 
   # This tells NixOS to skip loading its default versions of these modules
-  # disabledModules = [
-  #   # "programs/wayland/mangowc.nix"
-  # ];
+  disabledModules = [
+    "config/fonts/fontconfig.nix"
+  ];
 
   systemd.services.libvirtd.wantedBy = lib.mkForce [ ]; # no autostart but keep socket activation
 
@@ -448,19 +449,71 @@ in
   # };
 
   fonts = {
+    fontDir.enable = true;
+    enableDefaultPackages = false;
     packages = with pkgs; [
-      nerd-fonts.iosevka
-      open-sans
+      # Sans-Serif
+      # geist-font # достаточно "незаметный"
+      (google-fonts.override {
+        fonts = [ "Roboto Condensed" ];
+      })
+      # (iosevka-bin.override { variant = "Aile"; }) # Смотрится по-технически, сухо - это минус
+      # ibm-plex # Sans Condensed красивый, но кириллица отображается криво - ударения и буква Ж, проблемы с шириной букв
+
+      # Serif
+      literata # Красивый, легко читается, в меру нарядный, "мягкий", со сложными утолщениями и изгибами в качестве засечек
+      # merriweather # Аккуратный, легко читается, "острый", c простыми, буквальными засечками
+      # (iosevka-bin.override { variant = "Etoile"; }) # Смотрится по-технически, как советская инструкция, напечатанная на машинке
+
+      # Monospace
+      iosevka-bin # Идеален дял терминала, прекрасен во всём
+      # nerd-fonts.iosevka
+
+      # Emoji
+      (pkgs.callPackage ./apple-emoji.nix { }) # Неподражаемые Apple Emoji!
+
+      # Fallback
+      nerd-fonts.symbols-only
+      noto-fonts
+      noto-fonts-cjk-sans
+      noto-fonts-cjk-serif
     ];
 
     fontconfig = {
       defaultFonts = {
-        monospace = [ "Iosevka Nerd Font" ];
-        # serif = [ "" ];
-        sansSerif = [ "Open Sans" ];
+        sansSerif = [
+          "Roboto Condensed"
+
+          "Noto Sans"
+          "Noto Sans CJK JP"
+          "Symbols Nerd Font"
+        ];
+        serif = [
+          "Literata"
+          "Merriweather"
+
+          "Noto Serif"
+          "Noto Serif CJK JP"
+          "Symbols Nerd Font"
+        ];
+        monospace = [
+          "Iosevka Curly"
+
+          "Symbols Nerd Font"
+          "Noto Sans" # Last resort
+        ];
+        emoji = [ "Apple Emoji" ];
+      };
+
+      aliases = {
+        "ui-monospace".prefer = [ "Iosevka" ];
+        "system-ui".prefer = [ "Roboto Condensed" ];
+        "ui-serif".prefer = [ "Literata" ];
+        "ui-rounded".prefer = [ "Roboto Condensed" ];
       };
     };
   };
+
   services.gvfs.enable = true;
   programs.fuse.userAllowOther = true;
 

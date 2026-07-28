@@ -104,6 +104,11 @@ in
           accent-color = "teal";
           enable-hot-corners = false;
           show-battery-percentage = true;
+
+          # Fonts
+          font-name = "Roboto Condensed 13";
+          document-font-name = "Literata 12";
+          monospace-font-name = "Iosevka Curly 11";
         };
         "org/gnome/shell/app-switcher".current-workspace-only = true;
         "org/gnome/desktop/wm/preferences" = {
