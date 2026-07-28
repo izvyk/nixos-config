@@ -27,8 +27,6 @@ in
     ./neovim.nix
 
     <nixpkgs-unstable/nixos/modules/config/fonts/fontconfig.nix>
-    # "${unstable-src}/nixos/modules/programs/wayland/mangowc.nix"
-    # "${unstable-src}/nixos/modules/services/system/nohang.nix"
 
     "${agenix-src}/modules/age.nix"
   ];
