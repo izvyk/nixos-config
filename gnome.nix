@@ -150,6 +150,9 @@ in
 
         "org/gnome/settings-daemon/plugins/media-keys" = {
           screensaver = [ "F23" ];
+          help = [ ];
+          home = [ "<Super>e" ];
+          www = [ "<Super>w" ];
           custom-keybindings = [
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
