@@ -35,7 +35,9 @@ in
       packages.myVimPackage = with pkgs.vimPlugins; {
         start = [
           gruvbox-material-nvim
-          nvim-lspconfig
+          snacks-nvim
+          mini-nvim
+          guess-indent-nvim
 
           (nvim-treesitter.withPlugins (
             plugins: with plugins; [

@@ -39,6 +39,13 @@ opt.smarttab = true
 opt.mouse = "a"
 opt.backup = false
 
+-- Yank to system clipboard
+vim.keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
+
+-- Paste from system clipboard
+vim.keymap.set({ "n", "v" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
+vim.keymap.set({ "n", "v" }, "<leader>P", '"+P', { desc = "Paste from system clipboard" })
+
 vim.diagnostic.config({
   virtual_text = { prefix = "● " },
   underline = true,
@@ -79,8 +86,10 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- LSP & Formatting
--- Extend the default nil_ls configuration provided by nvim-lspconfig
 vim.lsp.config("nil_ls", {
+  cmd = { "nil" },
+  filetypes = { "nix" },
+  root_dir = vim.fs.root(0, { "flake.nix", "default.nix", ".git" }),
   settings = {
     ["nil"] = {
       formatting = {
@@ -103,4 +112,45 @@ vim.api.nvim_create_autocmd("LspAttach", {
       vim.lsp.buf.format({ async = true })
     end, vim.tbl_extend("force", opts, { desc = "Format current buffer" }))
   end,
+})
+
+-- Plugins
+require("snacks").setup({
+  -- Sysadmin Tools --
+  bigfile = { enabled = true },   -- Prevent freezes on huge log/data files
+  quickfile = { enabled = true }, -- Instant rendering when opening `nvim /path/to/file`
+  bufdelete = { enabled = true }, -- Delete buffers without messing up your window layout
+  scratch = { enabled = true },   -- Quick throwaway buffers for regex or notes
+  terminal = { enabled = true },  -- Clean floating terminal integration
+
+  -- Quality of Life --
+  words = { enabled = true },     -- Auto-highlight identical words under your cursor
+  statuscolumn = { enabled = false }, -- Keep the left gutter simple and clean
+  picker = { enabled = false },   -- Set to true ONLY if you want a built-in fuzzy finder without installing Telescope/fzf
+
+  -- Eye Candy --
+  animate = { enabled = true },  -- UI scrolling animations
+  dashboard = { enabled = false }, -- Skip the fancy ASCII art startup screen
+  zen = { enabled = false },      -- Distraction-free mode isn't needed for config editing
+  scroll = { enabled = true },   -- Smooth scrolling
+});
+
+require("mini.surround").setup()
+require("mini.pairs").setup()
+require("mini.statusline").setup({
+  use_icons = true,
+})
+require("mini.indentscope").setup({
+  symbol = "│",
+  options = { try_as_border = true },
+})
+
+require("guess-indent").setup({
+  auto_cmd = true,  -- Run automatically when opening a buffer
+  override_editorconfig = false, -- Let .editorconfig files win if they exist
+  -- filetype_exclude = { -- Don't guess in scratchpads or system panels
+  --   "netrw",
+  --   "TelescopePrompt",
+  --   "oil",
+  -- },
 })
