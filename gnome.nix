@@ -209,6 +209,12 @@ in
           name = "Vicinae: toggle";
         };
 
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7" = {
+          binding = "<Super>period";
+          command = "vicinae deeplink vicinae://launch/core/search-emojis";
+          name = "Vicinae emoji picker";
+        };
+
         "org/gnome/mutter" = {
           workspaces-only-on-primary = false;
           experimental-features = [
