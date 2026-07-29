@@ -15,12 +15,12 @@ let
       "${key}" = "timeout(macro2(-1, 0, ${key}), ${toString timeout}ms, macro2(-1, 0, ${heldAction}))";
     };
 
-  F23Lock =
+  F21Lock =
     key:
     tapHold {
       key = key;
       timeout = 400;
-      heldAction = "f23";
+      heldAction = "f21";
     }; # BUG: fires on release instead of firing on timeout expiration if the mouse pointer is moving
 
   sharedMain = {
@@ -40,7 +40,7 @@ let
     key = "sysrq";
     heldAction = "S-sysrq";
   }
-  // F23Lock "escape";
+  // F21Lock "escape";
 
   sharedSpaceLayer = {
     # Developer Additions: Vim navigation
@@ -216,7 +216,7 @@ in
             #   key = "home";
             #   heldAction = "f24";
             # }
-            // F23Lock "`"
+            // F21Lock "grave"
             // fKeyBindings;
 
           # Fix input lag on M-grave

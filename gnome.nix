@@ -85,6 +85,7 @@ in
       # Explicit dconf entries - GNOME Wayland reads these
       dconf.settings = {
         "org/gnome/desktop/input-sources" = {
+          xkb-options = [ "fkeys:basic_13-24" ];
           sources = [
             (lib.gvariant.mkTuple [
               "xkb"
@@ -96,6 +97,7 @@ in
             ])
           ];
         };
+
         "org/gnome/desktop/interface" = {
           clock-show-seconds = true;
           cursor-size = 24;
@@ -149,7 +151,7 @@ in
         };
 
         "org/gnome/settings-daemon/plugins/media-keys" = {
-          screensaver = [ "F23" ];
+          screensaver = [ "F21" ];
           help = [ ];
           home = [ "<Super>e" ];
           www = [ "<Super>w" ];
@@ -161,6 +163,7 @@ in
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/"
+            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/"
           ];
         };
 
@@ -171,27 +174,27 @@ in
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
-          binding = "Launch5";
+          binding = "F14";
           command = "/home/${username}/.local/bin/volume-down";
-          name = "Volume down F14";
+          name = "Volume down";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
-          binding = "Launch6";
+          binding = "F15";
           command = "/home/${username}/.local/bin/volume-up";
-          name = "Volume up F15";
+          name = "Volume up";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
-          binding = "Launch7";
+          binding = "F16";
           command = "/home/${username}/.local/bin/brightness-down";
-          name = "Brightness down F16";
+          name = "Brightness down";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
-          binding = "Launch8";
+          binding = "F17";
           command = "/home/${username}/.local/bin/brightness-up";
-          name = "Brightness up F17";
+          name = "Brightness up";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5" = {
