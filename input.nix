@@ -219,6 +219,15 @@ in
             // F23Lock "`"
             // fKeyBindings;
 
+          # Fix input lag on M-grave
+          meta.grave = "M-grave";
+
+          # Fix input lag on C-grave
+          control.grave = "C-grave";
+
+          # Fix ~ repeat on S-grave
+          shift.grave = "S-grave";
+
           "control+shift" = sharedCtrlShiftLayer;
 
           space_layer = sharedSpaceLayer // {
