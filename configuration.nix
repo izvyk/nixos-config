@@ -31,7 +31,6 @@ in
     "${agenix-src}/modules/age.nix"
   ];
 
-  # This tells NixOS to skip loading its default versions of these modules
   disabledModules = [
     "config/fonts/fontconfig.nix"
   ];
