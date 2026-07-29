@@ -1,4 +1,5 @@
 {
+  config,
   lib,
   pkgs,
   ...
@@ -33,8 +34,31 @@ let
 
     space = "overloadt(space_layer, space, 300)";
 
-    # a = "timeout(w, 250ms, macro2(-1, 0, q))";
-    # a = "timeout(macro2(0, 0, w), 250ms, macro2(0, 0, q))"; # BUG: q is typed exactly twice
+    leftmeta = "overload(meta, macro2(-1, 0, M-o))";
+
+    ### MOUSE
+
+    # Thumb button
+    # "f20" = "overload(thumb_layer, layer(meta))";
+    "f20" = "overload(thumb_layer, macro2(-1, 0, M-o))";
+
+    # Normal scroll wheel
+    "f18" = "scrollup";
+    "f19" = "scrolldown";
+
+    # Right mouse key as a layer trigger
+    "rightmouse" = "overload(rightmouse_layer, rightmouse)";
+  }
+  # player controls on back/forward
+  // tapHold {
+    key = "mouse1";
+    timeout = 400;
+    heldAction = "previoussong";
+  }
+  // tapHold {
+    key = "mouse2";
+    timeout = 400;
+    heldAction = "nextsong";
   }
   // tapHold {
     key = "sysrq";
@@ -119,6 +143,33 @@ let
       }
     ) numberRowToF
   );
+
+  thumbLayerA = {
+    # classic zoom
+    "leftmouse" = "C-minus";
+    "rightmouse" = "C-equal";
+    "leftmouse+rightmouse" = "C-0";
+
+    # WARNING: This still works, it just doesn't need to be here!
+    # touchpad-style zoom (e.g. in browsers)
+    # "f18" = "scrollup";
+    # "f19" = "scrolldown";
+
+    # misc
+    "middlemouse" = "f5";
+  };
+
+  rightmouseLayer = {
+    # horizontal scroll for the main wheel
+    "f18" = "scrollleft";
+    "f19" = "scrollright";
+
+    # Brightness for thumb wheel
+    "f14" = "f16";
+    "f15" = "f17";
+
+    "middlemouse" = "f5";
+  };
 in
 {
   services.keyd = {
@@ -126,13 +177,13 @@ in
     # package = pkgs.unstable.keyd;
     keyboards = {
       # ----------------------------------------------------
-      # 1. LAPTOP & ALL OTHER KEYBOARDS
+      # 1. LAPTOP & ALL OTHER KEYBOARDS + MX Master
       # ----------------------------------------------------
       default = {
         ids = [
           "*"
-          # "0000:0000"
-          # "046d:c548"
+          "0000:0000" # logid
+          "046d:c548" # mx master
           "-1050:*" # exclude Yubikeys
           "-0000:0006"
         ];
@@ -140,65 +191,9 @@ in
           main = sharedMain;
           space_layer = sharedSpaceLayer;
           "control+shift" = sharedCtrlShiftLayer;
-        };
-      };
 
-      # Mouse remaps (mouse -> logid -> keyd)
-      mxmaster = {
-        ids = [
-          "0000:0000"
-          "046d:c548"
-        ];
-        settings = {
-          main = {
-            # Thumb button
-            "f20" = "overload(thumb_layer, layer(meta))";
-
-            # Normal scroll wheel
-            "f18" = "scrollup";
-            "f19" = "scrolldown";
-
-            # Right mouse key as a layer trigger
-            "rightmouse" = "overload(rightmouse_layer, rightmouse)";
-          }
-          # player controls on back/forward
-          // tapHold {
-            key = "mouse1";
-            timeout = 400;
-            heldAction = "previoussong";
-          }
-          // tapHold {
-            key = "mouse2";
-            timeout = 400;
-            heldAction = "nextsong";
-          };
-
-          "thumb_layer:A" = {
-            # classic zoom
-            "leftmouse" = "macro2(250, 250, C-minus)";
-            "rightmouse" = "macro2(250, 250, C-equal)";
-            "leftmouse+rightmouse" = "C-0";
-
-            # WARNING: This still works, it just doesn't need to be here!
-            # touchpad-style zoom (e.g. in browsers)
-            # "f18" = "scrollup";
-            # "f19" = "scrolldown";
-
-            # misc
-            "middlemouse" = "f5";
-          };
-
-          "rightmouse_layer" = {
-            # horizontal scroll for the main wheel
-            "f18" = "scrollleft";
-            "f19" = "scrollright";
-
-            # Brightness for thumb wheel
-            "f14" = "f16";
-            "f15" = "f17";
-
-            "middlemouse" = "f5";
-          };
+          "thumb_layer:A" = thumbLayerA;
+          "rightmouse_layer" = rightmouseLayer;
         };
       };
 
@@ -240,6 +235,9 @@ in
             "-" = "volumedown";
             "equal" = "volumeup";
           };
+
+          "thumb_layer:A" = thumbLayerA;
+          "rightmouse_layer" = rightmouseLayer;
         };
       };
     };

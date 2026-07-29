@@ -19,7 +19,7 @@ in
 
   imports = [
     ./hardware-configuration.nix
-    ./gnome.nix
+    ./niri.nix
     ./dock-mode.nix
     ./input.nix
     ./home-manager.nix
