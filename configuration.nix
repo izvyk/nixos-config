@@ -25,6 +25,7 @@ in
     ./home-manager.nix
     ./network.nix
     ./neovim.nix
+    ./brightness-driver.nix
 
     <nixpkgs-unstable/nixos/modules/config/fonts/fontconfig.nix>
 

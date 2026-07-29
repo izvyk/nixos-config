@@ -25,6 +25,9 @@
 # Allow lua files
 !*.lua
 
+# Allow python files
+!*.py
+
 # ==========================================
 # 3. EXPLICIT RE-DENY (Overrides Allow)
 # ==========================================
