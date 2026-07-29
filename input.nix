@@ -346,4 +346,6 @@ in
       ];
     };
   };
+
+  i18n.inputMethod.enable = false;
 }
