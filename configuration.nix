@@ -708,6 +708,9 @@ in
 
     # USB-Hub
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="214b", ATTR{idProduct}=="7260", ATTR{power/autosuspend}="-1", ATTR{power/control}="on"
+
+    # Mouse: no wakeup
+    ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
   '';
 
   services.ananicy = {
