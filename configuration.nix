@@ -330,7 +330,7 @@ in
     tmux
 
     nix-index
-    android-tools
+    unstable.android-tools
 
     man-pages # Provides Linux programmer's manual
     man-pages-posix # Optional, but highly recommended for standard POSIX API docs
@@ -595,7 +595,7 @@ in
         Enable = "Source,Sink,Media,Socket";
         # Экспериментальный флаг часто необходим для включения расширенных кодеков
         # и передачи информации о заряде батареи
-        # Experimental = true;
+        Experimental = true;
       };
     };
   };

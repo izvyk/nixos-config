@@ -96,13 +96,13 @@ in
         # unstable.opencode
         # unstable.pi-coding-agent
         unstable.gemini-cli-bin
-        unstable.antigravity
+        unstable.antigravity-ide
         lazygit
         unstable.yazi
         # gnumake
         # gcc
         # glibc.static
-        chromium
+        # chromium
         libreoffice
         # zoom-us
         libnotify
@@ -133,6 +133,7 @@ in
         obsidian
         unstable.tuxguitar
         gnome-podcasts
+        unstable.cassette
 
         # snapshotScript
       ];
