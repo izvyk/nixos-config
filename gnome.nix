@@ -135,8 +135,8 @@ in
         };
         "org/gnome/desktop/wm/keybindings" = {
           close = [ "<Super>q" ];
-          cycle-windows = [ "<Control>grave" ];
-          cycle-windows-backward = [ "<Shift><Control>grave" ];
+          cycle-windows = [ ];
+          cycle-windows-backward = [ ];
           switch-windows = [ "<Control>Tab" ];
           switch-windows-backward = [ "<Shift><Control>Tab" ];
           # To avoid confusions when switching between iqunix keyboard and laptop keyboard
