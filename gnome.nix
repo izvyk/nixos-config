@@ -108,7 +108,7 @@ in
           show-battery-percentage = true;
 
           # Fonts
-          font-name = "Roboto Condensed 13";
+          font-name = "Iosevka Etoile Regular 13";
           document-font-name = "Literata 12";
           monospace-font-name = "Iosevka Curly 11";
         };
