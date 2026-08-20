@@ -19,7 +19,6 @@ in
 
   imports = [
     ./hardware-configuration.nix
-    ./zram.nix
     ./gnome.nix
     ./dock-mode.nix
     ./input.nix
@@ -708,6 +707,7 @@ in
     resumeDevice = "/dev/mapper/cryptroot";
     kernelPackages = pkgs.linuxPackages_latest;
     consoleLogLevel = 0;
+    zswap.enable = true;
     loader = {
       timeout = 0;
       systemd-boot.enable = true;

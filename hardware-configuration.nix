@@ -196,7 +196,6 @@
       device = "/swap/swapfile";
       size = 16 * 1024;
       priority = -1;
-      options = [ "noauto" ];
     }
   ];
 
