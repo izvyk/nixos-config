@@ -11,6 +11,8 @@
 
 let
   username = "izvyk";
+  server-ts = "server.shorthair-inconnu.ts.net";
+  server-ssh-pub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPI3xUUvndkvdm2DiHKAl+7pu6D9k3WsrPwLyfBHpTe";
 
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
@@ -126,16 +128,20 @@ in
     mode = "0400";
   };
 
+  programs.ssh.knownHosts.server = {
+    extraHostNames = [
+      "server.lan"
+      "${server-ts}"
+    ];
+    publicKey = "${server-ssh-pub}";
+  };
+
   services.btrbk = {
     instances.home = {
       onCalendar = "hourly";
       settings = {
         snapshot_preserve_min = "3d";
-        snapshot_preserve = "2w 2M";
-
-        stream_compress = "lz4";
-        ssh_identity = config.age.secrets."btrbk-ssh-key".path;
-        ssh_user = "btrbk";
+        snapshot_preserve = "2w 2m";
         volume = {
           "/.btrfs-fsroot" = {
             snapshot_dir = "@snapshots";
@@ -144,6 +150,25 @@ in
               "@masterdata" = { };
             };
           };
+        };
+      };
+    };
+    instances.offsite = {
+      onCalendar = "daily";
+      settings = {
+        snapshot_create = "no";
+        snapshot_preserve_min = "all";
+        target_preserve_min = "no";
+        target_preserve = "3d 2w 2m";
+        ssh_identity = config.age.secrets."btrbk-ssh-key".path;
+        ssh_user = "btrbk";
+        send_compressed_data = "yes";
+        send_protocol = "2";
+        stream_buffer_remote = "256m";
+        volume."/.btrfs-fsroot" = {
+          snapshot_dir = "@snapshots";
+          subvolume."@home".target = "ssh://${server-ts}/backup/laptop";
+          subvolume."@masterdata".target = "ssh://${server-ts}/backup/masterdata";
         };
       };
     };
