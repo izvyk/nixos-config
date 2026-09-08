@@ -10,8 +10,8 @@
 }:
 
 let
-  username = "izvyk";
-  server-ts = "server.shorthair-inconnu.ts.net";
+  username = "phil";
+  server-ts = "tortila.shorthair-inconnu.ts.net";
   server-ssh-pub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPI3xUUvndkvdm2DiHKAl+7pu6D9k3WsrPwLyfBHpTe";
 
   agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
@@ -130,7 +130,7 @@ in
 
   programs.ssh.knownHosts.server = {
     extraHostNames = [
-      "server.lan"
+      "tortila.lan"
       "${server-ts}"
     ];
     publicKey = "${server-ssh-pub}";
