@@ -123,8 +123,8 @@ in
 
   age.secrets."btrbk-ssh-key" = {
     file = ./secrets/btrbk-ssh-key.age;
-    owner = "root";
-    group = "root";
+    owner = "btrbk";
+    group = "btrbk";
     mode = "0400";
   };
 
@@ -140,8 +140,8 @@ in
     instances.home = {
       onCalendar = "hourly";
       settings = {
-        snapshot_preserve_min = "3d";
-        snapshot_preserve = "2w 2m";
+        # Create snapshots only. Do not prune shared snapshots here.
+        snapshot_preserve_min = "all";
         volume = {
           "/.btrfs-fsroot" = {
             snapshot_dir = "@snapshots";
@@ -154,12 +154,17 @@ in
       };
     };
     instances.offsite = {
-      onCalendar = "daily";
+      onCalendar = "*-*-* 21:00:00";
       settings = {
         snapshot_create = "no";
-        snapshot_preserve_min = "all";
+
+        # Source retention, applied only after a successful offsite run.
+        snapshot_preserve_min = "3d";
+        snapshot_preserve = "2w 2m";
+
         target_preserve_min = "no";
         target_preserve = "3d 2w 2m";
+
         ssh_identity = config.age.secrets."btrbk-ssh-key".path;
         ssh_user = "btrbk";
         send_compressed_data = "yes";
