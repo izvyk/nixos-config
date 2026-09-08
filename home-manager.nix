@@ -79,7 +79,6 @@ in
         # materialgram
         # telegram-desktop
         keepassxc
-        # gparted
         mpv
         vscode
         qpwgraph

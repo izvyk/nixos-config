@@ -344,6 +344,8 @@ in
     nixfmt
 
     cryptsetup
+    exfatprogs
+    f2fs-tools
 
     direnv
     nix-direnv
@@ -358,6 +360,7 @@ in
     gst_all_1.gst-libav
 
     tmux
+    gparted
 
     nix-index
     unstable.android-tools
