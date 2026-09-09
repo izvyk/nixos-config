@@ -1,12 +1,8 @@
 {
   config,
-  lib,
   pkgs,
   ...
 }:
-
-let
-in
 {
   networking.hostName = "buratino";
   # Pick only one of the below networking options.

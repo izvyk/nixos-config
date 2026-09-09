@@ -1,8 +1,8 @@
 {
-  config,
   pkgs,
   lib,
   username,
+  inputs,
   ...
 }:
 
@@ -77,8 +77,7 @@ in
 {
   home-manager.users.${username} = {
     imports = [
-      # "${dockInterceptorSrc}/dock-monitor.nix"
-      /home/phil/Projects/godbus-monitor/godbus-monitor.nix
+      "${inputs.godbus-monitor}/godbus-monitor.nix"
     ];
 
     services.godbus-monitor = {

@@ -6,31 +6,32 @@
   config,
   lib,
   pkgs,
+  inputs,
   ...
 }:
-
 let
   username = "phil";
   server-ts = "tortila.shorthair-inconnu.ts.net";
   server-ssh-pub = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDPI3xUUvndkvdm2DiHKAl+7pu6D9k3WsrPwLyfBHpTe";
-
-  agenix-src = fetchTarball "https://github.com/ryantm/agenix/archive/main.tar.gz";
 in
 {
   _module.args.username = username;
 
   imports = [
     ./hardware-configuration.nix
+    ./hardware-configuration.nix
     ./gnome.nix
     ./dock-mode.nix
     ./input.nix
     ./home-manager.nix
     ./network.nix
-    ./neovim.nix
+    ../../modules/neovim.nix
+    ../../modules/nixpkgs-overlay.nix
 
-    <nixpkgs-unstable/nixos/modules/config/fonts/fontconfig.nix>
+    # fontconfig.aliases only exists in unstable
+    "${inputs.nixpkgs-unstable}/nixos/modules/config/fonts/fontconfig.nix"
 
-    "${agenix-src}/modules/age.nix"
+    inputs.agenix.nixosModules.default
   ];
 
   disabledModules = [
@@ -94,7 +95,7 @@ in
   };
 
   age.secrets."btrbk-ssh-key" = {
-    file = ./secrets/btrbk-ssh-key.age;
+    file = ../../secrets/btrbk-ssh-key.age;
     owner = "btrbk";
     group = "btrbk";
     mode = "0400";
@@ -252,34 +253,36 @@ in
 
   nixpkgs.config = {
     allowUnfree = true;
-    packageOverrides = pkgs: {
-      unstable = import <nixpkgs-unstable> {
-        config = pkgs.config;
-      };
-      # agenix = (import agenix-src { inherit pkgs; }).agenix;
-
-      # Wrapped to automatically use the system identity key to avoid manually typing --identity
-      agenix = pkgs.writeShellScriptBin "agenix" ''
-        exec ${
-          (import agenix-src { inherit pkgs; }).agenix
-        }/bin/agenix -i /etc/ssh/ssh_host_ed25519_key "$@"
-      '';
-    };
   };
-  nix.settings = {
-    auto-optimise-store = true;
-    experimental-features = [
-      "nix-command"
-      "flakes"
-    ];
 
-    tarball-ttl = 86400;
-    substituters = [ "https://devenv.cachix.org" ];
-    trusted-public-keys = [ "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=" ];
-    trusted-users = [
-      "root"
-      # "${username}"
-    ];
+  # Keep one rebuild below the 6c/12t laptop's interactive workload.  Four
+  # build threads leave room for GNOME, the browser, and memory compression.
+  nix = {
+    settings = {
+      cores = 4;
+      max-jobs = 1;
+
+      auto-optimise-store = true;
+      experimental-features = [
+        "nix-command"
+        "flakes"
+      ];
+
+      tarball-ttl = 86400;
+      substituters = [ "https://devenv.cachix.org" ];
+      trusted-public-keys = [ "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=" ];
+      trusted-users = [
+        "root"
+        # "${username}"
+      ];
+    };
+    daemonCPUSchedPolicy = "idle";
+    daemonIOSchedClass = "idle";
+    gc = {
+      automatic = true;
+      dates = "weekly";
+      options = "--delete-older-than 30d";
+    };
   };
 
   services.xserver.enable = false;
@@ -520,13 +523,13 @@ in
   };
 
   age.secrets."syncthing-cert" = {
-    file = ./secrets/syncthing-cert.age;
+    file = ../../secrets/syncthing-cert.age;
     owner = username;
     group = "users";
   };
 
   age.secrets."syncthing-key" = {
-    file = ./secrets/syncthing-key.age;
+    file = ../../secrets/syncthing-key.age;
     owner = username;
     group = "users";
   };
@@ -622,22 +625,6 @@ in
     # lidSwitchDocked = "ignore";
     HandleLidSwitchExternalPower = "suspend-then-hibernate";
     # HandleSuspendKey = "suspend-then-hibernate";
-  };
-
-  # Keep one rebuild below the 6c/12t laptop's interactive workload.  Four
-  # build threads leave room for GNOME, the browser, and memory compression.
-  nix = {
-    settings = {
-      cores = 4;
-      max-jobs = 1;
-    };
-    daemonCPUSchedPolicy = "idle";
-    daemonIOSchedClass = "idle";
-    gc = {
-      automatic = true;
-      dates = "weekly";
-      options = "--delete-older-than 30d";
-    };
   };
 
   systemd.sleep.settings.Sleep = {
@@ -773,11 +760,6 @@ in
       "nmi_watchdog=0"
     ];
   };
-
-  # Copy the NixOS configuration file and link it from the resulting system
-  # (/run/current-system/configuration.nix). This is useful in case you
-  # accidentally delete configuration.nix.
-  system.copySystemConfiguration = true;
 
   # This option defines the first version of NixOS you have installed on this particular machine,
   # and is used to maintain compatibility with application data (e.g. databases) created on older NixOS versions.

@@ -1,17 +1,11 @@
 {
-  config,
   lib,
   pkgs,
   username,
+  inputs,
   ...
 }:
 
-# let
-#   godbusMonitorSrc = builtins.fetchGit {
-#     url = "https://github.com/izvyk/godbus-monitor.git";
-#     rev = "huh";
-#   };
-# in
 {
 
   # imports = [
@@ -42,8 +36,7 @@
     { pkgs, ... }:
     {
       imports = [
-        # "${godbusMonitorSrc}/godbus-monitor-home.nix"
-        /home/phil/Projects/godbus-monitor/godbus-monitor.nix
+        "${inputs.godbus-monitor}/godbus-monitor.nix"
       ];
 
       services.godbus-monitor =

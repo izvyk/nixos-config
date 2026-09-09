@@ -1,8 +1,7 @@
 {
-  config,
-  lib,
   pkgs,
   username,
+  inputs,
   ...
 }:
 
@@ -35,7 +34,7 @@ let
 in
 {
   imports = [
-    <home-manager/nixos>
+    inputs.home-manager.nixosModules.home-manager
   ];
 
   # 2. Tell Home Manager to use the global system packages
@@ -94,7 +93,6 @@ in
         unstable.zed-editor
         # unstable.opencode
         # unstable.pi-coding-agent
-        unstable.gemini-cli-bin
         unstable.antigravity-ide
         lazygit
         unstable.yazi
@@ -128,7 +126,6 @@ in
 
         unstable.devenv
         gocryptfs
-        vaults
         obsidian
         unstable.tuxguitar
         gnome-podcasts
