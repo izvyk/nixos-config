@@ -6,12 +6,12 @@
   ...
 }:
 
-let
-  lockInterceptorSrc = builtins.fetchGit {
-    url = "https://github.com/izvyk/lock-monitor.git";
-    rev = "99623650eaae4e6f9b49834f62cff00d76c159de";
-  };
-in
+# let
+#   godbusMonitorSrc = builtins.fetchGit {
+#     url = "https://github.com/izvyk/godbus-monitor.git";
+#     rev = "huh";
+#   };
+# in
 {
 
   # imports = [
@@ -42,44 +42,73 @@ in
     { pkgs, ... }:
     {
       imports = [
-        "${lockInterceptorSrc}/lock-monitor.nix"
+        # "${godbusMonitorSrc}/godbus-monitor-home.nix"
+        /home/phil/Projects/godbus-monitor/godbus-monitor.nix
       ];
 
-      services.lock-monitor =
+      services.godbus-monitor =
         let
           caffeineStateFile = "/tmp/.caffeine-was-enabled-${username}";
+          script = cmd: [
+            "sh"
+            "-c"
+            cmd
+          ];
         in
         {
           enable = true;
 
-          lockScript = ''
-            # ${pkgs.playerctl}/bin/playerctl pause
+          triggers = [
+            {
+              name = "on-lock";
+              bus = "system";
+              sender = "org.freedesktop.login1";
+              interface = "org.freedesktop.login1.Session";
+              property = "LockedHint";
+              operator = "==";
+              expected_value = "true";
+              only_on_change = true;
+              # debounce_ms = 500;
+              argv = script ''
+                ${pkgs.playerctl}/bin/playerctl -a -i GSConnect pause
 
-            # Save the caffeine state
-            ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
+                # Save the caffeine state
+                ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
 
-            if [ "$(${pkgs.dconf}/bin/dconf read /org/gnome/shell/extensions/caffeine/cli-toggle)" = "true" ]; then
-              ${pkgs.coreutils}/bin/touch "${caffeineStateFile}"
-            fi
-            ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle false
+                if [ "$(${pkgs.dconf}/bin/dconf read /org/gnome/shell/extensions/caffeine/cli-toggle)" = "true" ]; then
+                  ${pkgs.coreutils}/bin/touch "${caffeineStateFile}"
+                fi
+                ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle false
 
-            # Reset keyboard layout
-            ${pkgs.glib}/bin/gdbus call --session --dest org.gnome.Shell \
-                                        --object-path /dev/galets/gkr \
-                                        --method dev.galets.gkr.reset
-          '';
+                # Reset keyboard layout
+                ${pkgs.glib}/bin/gdbus call --session --dest org.gnome.Shell \
+                                            --object-path /dev/galets/gkr \
+                                            --method dev.galets.gkr.reset
+              '';
+            }
+            {
+              name = "on-unlock";
+              bus = "system";
+              sender = "org.freedesktop.login1";
+              interface = "org.freedesktop.login1.Session";
+              property = "LockedHint";
+              operator = "==";
+              expected_value = "false";
+              only_on_change = true;
+              # debounce_ms = 500;
+              argv = script ''
+                # ${pkgs.playerctl}/bin/playerctl play
 
-          unlockScript = ''
-            # ${pkgs.playerctl}/bin/playerctl play
+                ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
 
-            ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
-
-            # Restore the caffeine state
-            if [ -f "${caffeineStateFile}" ]; then
-              ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
-              ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
-            fi
-          '';
+                # Restore the caffeine state
+                if [ -f "${caffeineStateFile}" ]; then
+                  ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
+                  ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
+                fi
+              '';
+            }
+          ];
         };
 
       # Explicit dconf entries - GNOME Wayland reads these

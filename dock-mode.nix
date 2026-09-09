@@ -69,20 +69,70 @@ let
     };
   };
 
-  dockInterceptorSrc = builtins.fetchGit {
-    url = "https://github.com/izvyk/dock-monitor.git";
-    rev = "62e078a64909610d69abf7d321bb22744fdbefa3";
-  };
+  # dockInterceptorSrc = builtins.fetchGit {
+  #   url = "https://github.com/izvyk/dock-monitor.git";
+  #   rev = "62e078a64909610d69abf7d321bb22744fdbefa3";
+  # };
 in
 {
   home-manager.users.${username} = {
     imports = [
-      "${dockInterceptorSrc}/dock-monitor.nix"
+      # "${dockInterceptorSrc}/dock-monitor.nix"
+      /home/phil/Projects/godbus-monitor/godbus-monitor.nix
     ];
 
-    services.dock-monitor = {
+    services.godbus-monitor = {
       enable = true;
-      dockModeUnit = "dock-mode.service";
+      triggers = [
+        {
+          name = "dock-lid-closed";
+          bus = "system";
+          sender = "org.freedesktop.login1";
+          interface = "org.freedesktop.login1.Manager";
+          property = "LidClosed";
+          operator = "==";
+          expected_value = "true";
+          only_on_change = true;
+          # debounce_ms = 3000;
+          argv = [
+            "sh"
+            "-c"
+            ''
+              # Docked if GNOME is holding a blocking handle-lid-switch inhibitor
+              # (that's exactly what dock-monitor's isDockedByInhibitor checked).
+              # Small retry loop: the inhibitor can appear a beat after LidClosed flips.
+              for i in 1 2 3 4 5; do
+                if ${pkgs.systemd}/bin/busctl call org.freedesktop.login1 \
+                     /org/freedesktop/login1 org.freedesktop.login1.Manager ListInhibitors \
+                     2>/dev/null | ${pkgs.gnugrep}/bin/grep -q '"handle-lid-switch[^"]*"[^]]*"block"'; then
+                  ${pkgs.systemd}/bin/systemctl --user start dock-mode.service
+                  exit 0
+                fi
+                ${pkgs.coreutils}/bin/sleep 0.2
+              done
+              # No inhibitor -> lid closed on battery, system is about to suspend. Leave as-is.
+              exit 0
+            ''
+          ];
+        }
+        {
+          name = "dock-lid-open";
+          bus = "system";
+          sender = "org.freedesktop.login1";
+          interface = "org.freedesktop.login1.Manager";
+          property = "LidClosed";
+          operator = "==";
+          expected_value = "false";
+          only_on_change = true;
+          # debounce_ms = 3000;
+          argv = [
+            "${pkgs.systemd}/bin/systemctl"
+            "--user"
+            "stop"
+            "dock-mode.service"
+          ];
+        }
+      ];
     };
 
     systemd.user.services.dock-mode = {

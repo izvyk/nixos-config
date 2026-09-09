@@ -91,7 +91,6 @@ in
       "kvm"
       "adbusers"
     ];
-
   };
 
   age.secrets."btrbk-ssh-key" = {
@@ -671,6 +670,13 @@ in
     # Mouse: no wakeup
     ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
   '';
+
+  systemd.tmpfiles.rules = [
+    "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/data/dynamic_reclaim  - - - - 1"
+    "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/data/periodic_reclaim - - - - 1"
+    "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/metadata/dynamic_reclaim  - - - - 1"
+    "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/metadata/periodic_reclaim - - - - 1"
+  ];
 
   systemd.settings.Manager.RebootWatchdogSec = "0";
 
