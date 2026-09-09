@@ -233,7 +233,7 @@ in
         # ];
         "org/gnome/shell" = {
           always-show-log-out = true;
-          disable-extension-version-validation = true;
+          disable-extension-version-validation = false;
           disable-user-extensions = false;
           enabled-extensions = [
             "caffeine@patapon.info"

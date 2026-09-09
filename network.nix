@@ -72,9 +72,7 @@ in
   networking.nftables.enable = true;
   networking.firewall = {
     enable = true;
-    # Always allow traffic from your Tailscale network
-    trustedInterfaces = [ "tailscale0" ];
-    # Allow the Tailscale UDP port through the firewall
+    # Allow direct Tailscale peer connections without trusting every tailnet peer.
     allowedUDPPorts = [ config.services.tailscale.port ];
   };
 

@@ -71,33 +71,6 @@ in
       LC_IDENTIFICATION = "en_US.UTF-8";
     };
   };
-  # i18n.defaultLocale = "en_US.UTF-8";
-  # console = {
-  #   font = "Lat2-Terminus16";
-  #   keyMap = "us";
-  #   useXkbConfig = true; # use xkb.options in tty.
-  # };
-
-  # nixpkgs = {
-  #   overlays = [
-  #     (final: prev: {
-  #       gnome = prev.gnome.overrideScope (
-  #         gfinal: gprev: {
-  #           gvfs = gprev.gvfs.override {
-  #             googleSupport = true;
-  #             gnomeSupport = true;
-  #           };
-  #         }
-  #       );
-  #     })
-  #   ];
-  #
-  #   config = {
-  #     permittedInsecurePackages = [
-  #       "libsoup-2.74.3"
-  #     ];
-  #   };
-  # };
 
   users.groups.battery = { };
   users.groups.power_profile = { };
@@ -421,19 +394,9 @@ in
   #   };
   # };
 
-  programs.git = {
-    enable = true;
-
-    # Use 'config' instead of 'extraConfig' for system-wide settings
-    config = {
-      gpg.format = "ssh";
-      "gpg \"ssh\"".program = "${pkgs.openssh}/bin/ssh-keygen";
-
-      # If you are setting up signing globally (be careful with this for multi-user systems)
-      commit.gpgsign = true;
-      user.signingkey = "~/.ssh/yubikey.pub"; # Ensure this path is valid for all users or use absolute paths
-    };
-  };
+  # Keep Git's personal identity and signing policy in user-space.  The
+  # system only provides the program; it must not depend on a user's home.
+  programs.git.enable = true;
 
   programs.gnupg.agent.enableSSHSupport = false;
   services.yubikey-agent.enable = true;
@@ -543,7 +506,7 @@ in
   };
 
   services.gvfs.enable = true;
-  programs.fuse.userAllowOther = true;
+  # programs.fuse.userAllowOther = true;
 
   age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
 
@@ -655,17 +618,6 @@ in
     ];
   };
 
-  services.nohang = {
-    enable = true;
-    # package = pkgs.unstable.nohang;
-  };
-  # Inject sudo shim into the systemd service environment
-  systemd.services.nohang.path = [
-    (pkgs.writeShellScriptBin "sudo" ''
-      exec ${pkgs.doas}/bin/doas "$@"
-    '')
-  ];
-
   services.logind.settings.Login = {
     HandleLidSwitch = "suspend-then-hibernate";
     # lidSwitchDocked = "ignore";
@@ -673,11 +625,15 @@ in
     # HandleSuspendKey = "suspend-then-hibernate";
   };
 
-  # Limit nix rebuilds priority. When left on the default is uses all available resources which can make the system unusable
+  # Keep one rebuild below the 6c/12t laptop's interactive workload.  Four
+  # build threads leave room for GNOME, the browser, and memory compression.
   nix = {
-    settings.cores = 6;
-    # daemonCPUSchedPolicy = "idle";
-    # daemonIOSchedClass = "idle";
+    settings = {
+      cores = 4;
+      max-jobs = 1;
+    };
+    daemonCPUSchedPolicy = "idle";
+    daemonIOSchedClass = "idle";
     gc = {
       automatic = true;
       dates = "weekly";
@@ -695,12 +651,6 @@ in
   # powerManagement.powertop.enable = true;
   powerManagement.enable = true;
   # powerManagement.cpuFrequencyGovernor = "powersave";
-
-  system.autoUpgrade = {
-    enable = false;
-    dates = "daily";
-    operation = "boot";
-  };
 
   services.fwupd.enable = true;
 
@@ -721,18 +671,6 @@ in
     # Mouse: no wakeup
     ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
   '';
-
-  services.ananicy = {
-    enable = true;
-    package = pkgs.ananicy-cpp;
-    # Uses the exact rule set maintained by the CachyOS community
-    rulesProvider = pkgs.ananicy-rules-cachyos;
-    settings = {
-      apply_cgroup = false;
-      cgroup_load = false;
-      cgroup_realtime_workaround = lib.mkForce false;
-    };
-  };
 
   systemd.settings.Manager.RebootWatchdogSec = "0";
 
@@ -761,10 +699,6 @@ in
 
       "net.ipv4.tcp_congestion_control" = "bbr";
       "net.core.default_qdisc" = "fq";
-
-      # ---------------------------------------------------------------------
-      # ZRAM-Specific Tuning
-      # ---------------------------------------------------------------------
 
       # Myth: "Lower swappiness prevents disk IO."
       # Reality: With ZRAM, swap is highly compressed RAM.
