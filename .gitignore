@@ -12,6 +12,7 @@
 
 # Allow Nix configurations.
 !*.nix
+!*.lock
 
 # Allow securely encrypted agenix secrets.
 !*.age
