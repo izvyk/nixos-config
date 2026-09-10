@@ -23,16 +23,16 @@
 
   outputs = { self, nixpkgs-stable, nixpkgs-unstable, ... }@inputs: {
     nixosConfigurations = {
-      laptop = nixpkgs-stable.lib.nixosSystem {
+      buratino = nixpkgs-stable.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
-        modules = [ ./hosts/laptop ];
+        modules = [ ./hosts/buratino ];
       };
 
-      server = nixpkgs-stable.lib.nixosSystem {
+      tortila = nixpkgs-stable.lib.nixosSystem {
         system = "x86_64-linux";
         specialArgs = { inherit inputs; };
-        modules = [ ./hosts/server ];
+        modules = [ ./hosts/tortila ];
       };
     };
   };
