@@ -25,6 +25,7 @@ in
     ./input.nix
     ./home-manager.nix
     ./network.nix
+    ./hibernate-prep.nix
     ../../modules/neovim.nix
     ../../modules/nixpkgs-overlay.nix
 
