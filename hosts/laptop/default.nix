@@ -19,7 +19,6 @@ in
 
   imports = [
     ./hardware-configuration.nix
-    ./hardware-configuration.nix
     ./gnome.nix
     ./dock-mode.nix
     ./input.nix

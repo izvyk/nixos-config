@@ -10,7 +10,8 @@
   nixpkgs.overlays = [
     (final: prev: {
       unstable = import inputs.nixpkgs-unstable {
-        inherit (prev) system config;
+        system = prev.stdenv.hostPlatform.system;
+        inherit (prev) config;
       };
 
       agenix = final.writeShellScriptBin "agenix" ''
