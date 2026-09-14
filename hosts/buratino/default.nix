@@ -303,6 +303,7 @@ in
   };
 
   programs.fish.enable = true;
+  environment.shellAliases = lib.mkForce {}; # Don't add aliases to the shell
   # Tell direnv to hook into your fish shell
   programs.fish.interactiveShellInit = ''
     direnv hook fish | source
