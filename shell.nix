@@ -8,5 +8,7 @@ pkgs.mkShell {
     nil
     nixd
     package-version-server
+    lua-language-server
+    ruff # python linter
   ];
 }
