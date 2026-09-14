@@ -264,13 +264,13 @@
             "do-not-disturb-while-screen-sharing-or-recording@marcinjahn.com"
             "gsconnect@andyholmes.github.io"
             "middleclickclose@paolo.tranquilli.gmail.com"
-            "panel-corners@aunetx"
+            # "panel-corners@aunetx"
             "just-perfection-desktop@just-perfection"
             # "windowsNavigator@gnome-shell-extensions.gcampax.github.com"
             "color-picker@tuberry"
             "pip-on-top@rafostar.github.com"
             # "gocr@leonid.nasedkin"
-            "shotzy@SamkitJain660.github.io"
+            # "shotzy@SamkitJain660.github.io"
             # "copyous@boerdereinar.dev"
             "vicinae@dagimg-dot"
             "keyboard-reset@galets"
@@ -308,7 +308,13 @@
           night-light-enabled = true;
           night-light-schedule-automatic = false;
         };
-        "org/gnome/settings-daemon/plugins/power".power-button-action = "nothing";
+        "org/gnome/settings-daemon/plugins/power" = {
+          power-button-action = "nothing";
+          sleep-inactive-ac-timeout = 315;
+          sleep-inactive-battery-timeout = 315;
+        };
+
+        "org/gnome/desktop/session".idle-delay = 300;
 
         "org/gnome/shell/extensions/touchpad-gesture-customization" = {
           pinch-4-finger-gesture = "NONE";
@@ -372,14 +378,15 @@
         gnomeExtensions.pip-on-top
         gnomeExtensions.color-picker
         # gnomeExtensions.gocr
-        gnomeExtensions.shotzy
+        # gnomeExtensions.shotzy
         gnomeExtensions.copyous
-        gnomeExtensions.panel-corners
+        # gnomeExtensions.panel-corners
         gnomeExtensions.just-perfection
         gnomeExtensions.middle-click-to-close-in-overview
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
         gnomeExtensions.keyboard-reset
+        # gnomeExtensions.brightness-control-using-ddcutil
         gnomeExtensions.touchpad-gesture-customization
         gnomeExtensions.rounded-window-corners-reborn
 
