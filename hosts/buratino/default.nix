@@ -24,6 +24,7 @@ in
     ./input.nix
     ./home-manager.nix
     ./network.nix
+    ./virtualisation.nix
     ./hibernate-prep.nix
     ../../modules/neovim.nix
     ../../modules/nixpkgs-overlay.nix
@@ -38,7 +39,6 @@ in
     "config/fonts/fontconfig.nix"
   ];
 
-  systemd.services.libvirtd.wantedBy = lib.mkForce [ ]; # no autostart but keep socket activation
 
   systemd.services.systemd-user-sessions.unitConfig.After = [
     "remote-fs.target"
@@ -88,8 +88,6 @@ in
       "battery"
       "power_profile"
       "i2c"
-      "libvirtd"
-      "kvm"
       "adbusers"
     ];
   };
@@ -565,17 +563,6 @@ in
     ];
   };
 
-  virtualisation.libvirtd = {
-    enable = true;
-    qemu = {
-      package = pkgs.qemu_kvm;
-      runAsRoot = false;
-      # swtpm.enable = true;      # optional, only if you want vTPM anyway
-      # ovmf.enable = true;       # UEFI firmware
-    };
-  };
-
-  programs.virt-manager.enable = true;
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
