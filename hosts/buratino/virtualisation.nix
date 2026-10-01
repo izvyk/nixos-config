@@ -11,8 +11,15 @@
       package = pkgs.qemu_kvm;
       runAsRoot = false;
       swtpm.enable = true;
+      vhostUserPackages = [ pkgs.virtiofsd ];
       # UEFI and Secure Boot firmware are provided by QEMU automatically.
     };
+  };
+
+  # Guests need DHCP and DNS on the host; libvirt handles NAT and forwarding.
+  networking.firewall.interfaces.virbr0 = {
+    allowedUDPPorts = [ 53 67 ];
+    allowedTCPPorts = [ 53 ];
   };
 
   # Start libvirt on demand rather than at boot.
