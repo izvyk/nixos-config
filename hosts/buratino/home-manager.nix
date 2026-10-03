@@ -92,6 +92,7 @@ in
         # quickshell
         # yandex-music
         unstable.zed-editor
+        bubblewrap
         # unstable.opencode
         # unstable.pi-coding-agent
         unstable.antigravity-ide
