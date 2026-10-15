@@ -6,7 +6,7 @@
 }:
 let
   tailnet = "shorthair-inconnu.ts.net";
-  cloudflare-domain = "tekr.ink";
+  cloudflare-domain = "netak.li";
 in
 {
   _module.args = {
@@ -357,19 +357,25 @@ in
     };
   };
 
-  age.secrets.cloudflared-tekr-tunnel = {
-    file = ../../secrets/cloudflared-tekr-home-tunnel.age;
+  age.secrets.cloudflared-tortila-tunnel = {
+    file = ../../secrets/cloudflared-tortila-tunnel.age;
     owner = "root";
     mode = "0400";
   };
 
   services.cloudflared = {
     enable = true;
-    tunnels."01d101f2-404e-48f3-a669-32d39496ee5a" = {
-      credentialsFile = config.age.secrets.cloudflared-tekr-tunnel.path;
+    tunnels."81f0efdc-2c1f-4e98-a948-a598866e4039" = {
+      credentialsFile = config.age.secrets.cloudflared-tortila-tunnel.path;
       ingress = {
         "pdf.${cloudflare-domain}" = "http://localhost:2211";
         "convert.${cloudflare-domain}" = "http://localhost:3313";
+
+        # n8n: наружу открываются исключительно вебхуки
+          "n8n.${cloudflare-domain}" = {
+            service = "http://127.0.0.1:5678";
+            path = "^/(webhook|webhook-test)/.*";
+          };
       };
       default = "http_status:404";
     };

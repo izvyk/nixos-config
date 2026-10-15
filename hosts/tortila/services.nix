@@ -219,7 +219,7 @@ in
     enable = true;
     environment = {
       N8N_SECURE_COOKIE = "false";
-      WEBHOOK_URL = "https://${config.networking.hostName}.${tailnet}:9443";
+      WEBHOOK_URL = "https://n8n.${cloudflare-domain}/";
       N8N_EDITOR_BASE_URL = "https://${config.networking.hostName}.${tailnet}:9443";
       N8N_RUNNERS_ENABLED = "true";
       N8N_RUNNERS_AUTH_TOKEN_FILE = config.age.secrets."n8n-runners-auth-token".path;
@@ -364,8 +364,8 @@ in
 
           # OIDC config
           OIDC_DISPLAY_NAME = "Google";
-          OIDC_CLIENT_ID = "523ed1d8c56b918feac2775d02849e96a887f809ca1001a65f9f90f820397071";
-          OIDC_ISSUER_URL = "https://tekr.cloudflareaccess.com/cdn-cgi/access/sso/oidc/523ed1d8c56b918feac2775d02849e96a887f809ca1001a65f9f90f820397071";
+          OIDC_CLIENT_ID = "3c10529ab81a022a4fa7ac1a5dab479a38be2a51fca8ab7d41e250a0cb9f0944";
+          OIDC_ISSUER_URL = "https://izvyk.cloudflareaccess.com/cdn-cgi/access/sso/oidc/3c10529ab81a022a4fa7ac1a5dab479a38be2a51fca8ab7d41e250a0cb9f0944";
           OIDC_AUTO_CREATE_USERS = "true";
           OIDC_AUTO_LAUNCH = "true";
 
