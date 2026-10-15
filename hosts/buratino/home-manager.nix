@@ -70,17 +70,18 @@ in
         # firefox
         # foot # enabled as a service
         unstable.ghostty
-        unstable.kitty
+        # unstable.kitty
         # unstable.warp-terminal
         # unstable.nushell
         # yandex-music
         # kdePackages.filelight
+        unstable.brave-origin
         baobab
         # materialgram
         # telegram-desktop
         keepassxc
         mpv
-        vscode
+        # vscode
         qpwgraph
         cameractrls-gtk4
         eza
@@ -95,14 +96,14 @@ in
         bubblewrap
         # unstable.opencode
         # unstable.pi-coding-agent
-        unstable.antigravity-ide
+        # unstable.antigravity-ide
         lazygit
         unstable.yazi
         # gnumake
         # gcc
         # glibc.static
         # chromium
-        libreoffice
+        # libreoffice
         # zoom-us
         libnotify
 
