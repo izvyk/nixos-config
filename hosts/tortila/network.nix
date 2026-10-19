@@ -245,47 +245,53 @@ in
   # NOTE: serve set-config --all REPLACES the whole serve config, so any
   # manually added endpoint (e.g. via `tailscale serve` CLI) must also be
   # declared here or it gets wiped on next rebuild.
-  # NOTE 2: configFile (not `services`) because svc:artemon also needs a
-  # layer-7 Web handler (router web UI), which the module's `endpoints`
-  # schema cannot express.
   services.tailscale.serve = {
     enable = true;
-    configFile =
-      let
-        http = port: "http://127.0.0.1:${toString port}";
-        svc443 = port: { "tcp:443" = http port; };
-      in
-      pkgs.writeText "tailscale-serve-config.json" (
-        builtins.toJSON {
-          version = "0.0.1";
-          services = {
-            "svc:home".endpoints = svc443 config.services.homepage-dashboard.listenPort;
-            "svc:immich".endpoints = svc443 config.services.immich.port;
-            "svc:paperless".endpoints = svc443 config.services.paperless.port;
-            "svc:n8n".endpoints = svc443 5678;
-            "svc:stirling".endpoints = svc443 2211;
-            "svc:ollama".endpoints = svc443 config.services.ollama.port;
-            "svc:open-webui".endpoints = svc443 config.services.open-webui.port;
-            "svc:whisper".endpoints = svc443 2214;
-            "svc:transmute".endpoints = svc443 3313;
-            "svc:hermes".endpoints = svc443 9119;
-            "svc:anki".endpoints = svc443 8765;
-            # Router over the tailnet: SSH passthrough plus its web UI.
-            # (Previously set manually via CLI: tailscale serve
-            # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
-            # HTTPS handler for the router admin page.)
-            # "tcp:443" = "http://..." is the config-file form of a `--https`
-            # endpoint: tailscaled terminates TLS with the service's cert
-            # and proxies plaintext to the backend — same as all svc: entries.
-            "svc:artemon" = {
-              endpoints = {
-                "tcp:22" = "tcp://artemon.lan:22";
-                "tcp:443" = "http://artemon.lan:80";
-              };
-            };
-          };
-        }
-      );
+    services = {
+      home.endpoints = {
+        "tcp:443" = "http://127.0.0.1:${toString config.services.homepage-dashboard.listenPort}";
+      };
+      immich.endpoints = {
+        "tcp:443" = "http://127.0.0.1:${toString config.services.immich.port}";
+      };
+      paperless.endpoints = {
+        "tcp:443" = "http://127.0.0.1:${toString config.services.paperless.port}";
+      };
+      n8n.endpoints = {
+        "tcp:443" = "http://127.0.0.1:5678";
+      };
+      stirling.endpoints = {
+        "tcp:443" = "http://127.0.0.1:2211";
+      };
+      ollama.endpoints = {
+        "tcp:443" = "http://127.0.0.1:${toString config.services.ollama.port}";
+      };
+      open-webui.endpoints = {
+        "tcp:443" = "http://127.0.0.1:${toString config.services.open-webui.port}";
+      };
+      whisper.endpoints = {
+        "tcp:443" = "http://127.0.0.1:2214";
+      };
+      transmute.endpoints = {
+        "tcp:443" = "http://127.0.0.1:3313";
+      };
+      hermes.endpoints = {
+        "tcp:443" = "http://127.0.0.1:9119";
+      };
+      anki.endpoints = {
+        "tcp:443" = "http://127.0.0.1:8765";
+      };
+      # Router over the tailnet: SSH passthrough plus its web UI.
+      # (Previously set manually via CLI: tailscale serve
+      # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
+      # HTTPS handler for the router admin page. "tcp:443" = "http://…"
+      # is the config-file form of a `--https` endpoint: tailscaled
+      # terminates TLS with the service's cert and proxies plaintext.)
+      artemon.endpoints = {
+        "tcp:22" = "tcp://artemon.lan:22";
+        "tcp:443" = "http://artemon.lan:80";
+      };
+    };
   };
 
   age.secrets.cloudflared-tortila-tunnel = {
