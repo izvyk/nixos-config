@@ -207,19 +207,12 @@ in
     # Loose RPF: host is multihomed (wired + wireless) and an exit node.
     checkReversePath = "loose";
     interfaces."tailscale0" = {
+      # Only SSH: every app is served via Tailscale Services (svc:*).
+      # tailscaled receives the WireGuard traffic itself, terminates TLS
+      # and proxies plaintext to localhost — nothing else needs a
+      # firewall port, and per-app ports are gone entirely.
       allowedTCPPorts = [
         22 # SSH — removing this locks you out over the tailnet
-        443 # Homepage
-        7443 # Immich
-        8443 # Paperless
-        9443 # n8n
-        11443 # Stirling-PDF
-        12443 # Ollama
-        13443 # Open-WebUI
-        14443 # Whisper
-        15443 # Transmute
-        16443 # Hermes
-        17443 # Anki (AnkiConnect)
       ];
     };
   };
@@ -230,10 +223,6 @@ in
     enable = true;
     extraSetFlags = [ "--advertise-exit-node" ];
     extraUpFlags = [ ];
-
-    # Strict privilege separation: Allow only the Caddy user to fetch
-    # TLS certificates from the Tailscale socket.
-    permitCertUid = config.services.caddy.user;
   };
   # 2. Force tailscaled to use nftables (Critical for clean nftables-only systems)
   # This avoids the "iptables-compat" translation layer issues.
@@ -248,128 +237,50 @@ in
     };
   };
 
-  services.caddy = {
+  # Every app gets its own MagicDNS name (<service>.<tailnet>) on 443 with
+  # a Tailscale-provisioned cert; tailscaled terminates TLS and proxies
+  # plaintext HTTP to the local backends. Prefer one entry per service —
+  # sharing a single svc: name would lose the unique names and is only
+  # useful for HA/failover across hosts, which we don't have.
+  # NOTE: serve set-config --all REPLACES the whole serve config, so any
+  # manually added endpoint (e.g. via `tailscale serve` CLI) must also be
+  # declared here or it gets wiped on next rebuild.
+  # NOTE 2: configFile (not `services`) because svc:artemon also needs a
+  # layer-7 Web handler (router web UI), which the module's `endpoints`
+  # schema cannot express.
+  services.tailscale.serve = {
     enable = true;
-
-    # Homepage on 443
-    virtualHosts."${config.networking.hostName}.${tailnet}:443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
+    configFile =
+      let
+        http = port: "http://127.0.0.1:${toString port}";
+        svc443 = port: { "tcp:443" = http port; };
+      in
+      pkgs.writeText "tailscale-serve-config.json" (
+        builtins.toJSON {
+          version = "0.0.1";
+          services = {
+            "svc:home".endpoints = svc443 config.services.homepage-dashboard.listenPort;
+            "svc:immich".endpoints = svc443 config.services.immich.port;
+            "svc:paperless".endpoints = svc443 config.services.paperless.port;
+            "svc:n8n".endpoints = svc443 5678;
+            "svc:stirling".endpoints = svc443 2211;
+            "svc:ollama".endpoints = svc443 config.services.ollama.port;
+            "svc:open-webui".endpoints = svc443 config.services.open-webui.port;
+            "svc:whisper".endpoints = svc443 2214;
+            "svc:transmute".endpoints = svc443 3313;
+            "svc:hermes".endpoints = svc443 9119;
+            "svc:anki".endpoints = svc443 8765;
+            # Router over the tailnet: SSH passthrough plus its web UI.
+            # (Previously set manually via CLI: tailscale serve
+            # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
+            # HTTPS handler for the router admin page.)
+            "svc:artemon" = {
+              endpoints."tcp:22" = "tcp://artemon.lan:22";
+              web."artemon.${tailnet}:443".handlers."/".proxy = "http://artemon.lan:80";
+            };
+          };
         }
-        reverse_proxy 127.0.0.1:${toString config.services.homepage-dashboard.listenPort}
-      '';
-    };
-
-    # Immich on 7443
-    virtualHosts."${config.networking.hostName}.${tailnet}:7443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:${toString config.services.immich.port}
-      '';
-    };
-
-    # Paperless on 8443
-    virtualHosts."${config.networking.hostName}.${tailnet}:8443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:${toString config.services.paperless.port}
-      '';
-    };
-
-    # n8n on 9443
-    virtualHosts."${config.networking.hostName}.${tailnet}:9443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:5678
-      '';
-    };
-
-    # Vaultwarden on 10443
-    # virtualHosts."${config.networking.hostName}.${tailnet}:10443" = {
-    #   extraConfig = ''
-    #     tls {
-    #       get_certificate tailscale
-    #     }
-    #     reverse_proxy 127.0.0.1:${toString config.services.vaultwarden.config.ROCKET_PORT}
-    #   '';
-    # };
-
-    # StirlingPDF on 11443
-    virtualHosts."${config.networking.hostName}.${tailnet}:11443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:2211
-      '';
-    };
-
-    # ollama on 12443
-    virtualHosts."${config.networking.hostName}.${tailnet}:12443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:${toString config.services.ollama.port}
-      '';
-    };
-
-    # open-webui on 13443
-    virtualHosts."${config.networking.hostName}.${tailnet}:13443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:${toString config.services.open-webui.port}
-      '';
-    };
-
-    # whisper-cli on 14443
-    virtualHosts."${config.networking.hostName}.${tailnet}:14443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:2214
-      '';
-    };
-
-    # Transmute.sh on 15443
-    virtualHosts."${config.networking.hostName}.${tailnet}:15443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:3313
-      '';
-    };
-
-    # Hermes dashboard on 16443
-    virtualHosts."${config.networking.hostName}.${tailnet}:16443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:9119
-      '';
-    };
-
-    # AnkiConnect API on 17443
-    virtualHosts."${config.networking.hostName}.${tailnet}:17443" = {
-      extraConfig = ''
-        tls {
-          get_certificate tailscale
-        }
-        reverse_proxy 127.0.0.1:8765
-      '';
-    };
+      );
   };
 
   age.secrets.cloudflared-tortila-tunnel = {

@@ -11,6 +11,7 @@ let
     url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin";
     sha256 = "0ywqxbziyp2bv72riyjpw4brk9v46d4cfbjfwqvvjrrq0srakqqv";
   };
+  svc = name: "https://${name}.${tailnet}";
 in
 {
   age.secrets.homepage_env = {
@@ -22,7 +23,7 @@ in
   services.homepage-dashboard = {
     enable = true;
     listenPort = 2200;
-    allowedHosts = "localhost,127.0.0.1,${config.networking.hostName}.${tailnet}";
+    allowedHosts = "localhost,127.0.0.1,home.${tailnet}";
 
     # Point this to a secure file outside the nix store (e.g., via sops-nix or agenix)
     environmentFiles = [ config.age.secrets.homepage_env.path ];
@@ -60,7 +61,7 @@ in
           {
             "Vaultwarden" = {
               description = "Password Management";
-              href = "https://${config.networking.hostName}.${tailnet}:10443";
+              href = svc "vaultwarden";
               icon = "sh-bitwarden"; # Or sh-vaultwarden
             };
           }
@@ -71,7 +72,7 @@ in
           {
             "Immich" = {
               description = "Self-hosted Photo & Video Backup";
-              href = "https://${config.networking.hostName}.${tailnet}:7443";
+              href = svc "immich";
               icon = "sh-immich";
               # widget = {
               #   type = "immich";
@@ -85,7 +86,7 @@ in
           {
             "Paperless-ngx" = {
               description = "Document Management & OCR";
-              href = "https://${config.networking.hostName}.${tailnet}:8443";
+              href = svc "paperless";
               icon = "sh-paperless-ngx";
               # widget = {
               #   type = "paperlessngx";
@@ -97,7 +98,7 @@ in
           {
             "Stirling-PDF" = {
               description = "PDF Manipulation Tool";
-              href = "https://${config.networking.hostName}.${tailnet}:11443";
+              href = svc "stirling";
               icon = "sh-stirling-pdf";
             };
           }
@@ -108,42 +109,42 @@ in
           {
             "Ollama" = {
               description = "Local LLM Runner";
-              href = "https://${config.networking.hostName}.${tailnet}:12443";
+              href = svc "ollama";
               icon = "sh-ollama";
             };
           }
           {
             "Whisper" = {
               description = "Local Speech-To-Text Model";
-              href = "https://${config.networking.hostName}.${tailnet}:14443";
+              href = svc "whisper";
               icon = "sh-openai";
             };
           }
           {
             "Open-WebUI" = {
               description = "AI Chat Interface";
-              href = "https://${config.networking.hostName}.${tailnet}:13443";
+              href = svc "open-webui";
               icon = "sh-open-webui";
             };
           }
           {
             "n8n" = {
               description = "Workflow Automation";
-              href = "https://${config.networking.hostName}.${tailnet}:9443";
+              href = svc "n8n";
               icon = "sh-n8n";
             };
           }
           {
             "Hermes" = {
               description = "Hermes Agent dashboard";
-              href = "https://${config.networking.hostName}.${tailnet}:16443";
+              href = svc "hermes";
               icon = "sh-hermes-agent";
             };
           }
           {
             "Anki" = {
               description = "Headless Anki (AnkiConnect API)";
-              href = "https://${config.networking.hostName}.${tailnet}:17443";
+              href = svc "anki";
               icon = "sh-anki";
             };
           }
@@ -210,8 +211,8 @@ in
         pdfa_image_compression = "lossless";
       };
       # PAPERLESS_URL = "https://paperless.example.com";
-      PAPERLESS_URL = "https://${config.networking.hostName}.${tailnet}:8443";
-      PAPERLESS_CORS_ALLOWED_HOSTS = "https://${config.networking.hostName}.${tailnet}:8443";
+      PAPERLESS_URL = svc "paperless";
+      PAPERLESS_CORS_ALLOWED_HOSTS = svc "paperless";
     };
   };
 
@@ -227,7 +228,7 @@ in
     environment = {
       N8N_SECURE_COOKIE = "false";
       WEBHOOK_URL = "https://n8n.${cloudflare-domain}/";
-      N8N_EDITOR_BASE_URL = "https://${config.networking.hostName}.${tailnet}:9443";
+      N8N_EDITOR_BASE_URL = svc "n8n";
       N8N_RUNNERS_ENABLED = "true";
       N8N_RUNNERS_AUTH_TOKEN_FILE = config.age.secrets."n8n-runners-auth-token".path;
     };
@@ -292,9 +293,9 @@ in
     environmentVariables = {
       OLLAMA_KEEP_ALIVE = "5m"; # unload model after 5min idle to save RAM
       OLLAMA_NUM_THREADS = "6";
-      # Allow browser requests forwarded by Caddy on the tailnet vhost.
-      # Note: OLLAMA_HOST stays 127.0.0.1 — only the UI/API go through Caddy.
-      OLLAMA_ORIGINS = "http://localhost,https://localhost,http://localhost:*,https://localhost:*,http://127.0.0.1,https://127.0.0.1,http://127.0.0.1:*,https://127.0.0.1:*,https://${config.networking.hostName}.${tailnet},https://${config.networking.hostName}.${tailnet}:*";
+      # Allow browser requests served via Tailscale Services.
+      # Note: OLLAMA_HOST stays 127.0.0.1 — only the UI/API go through tailscaled.
+      OLLAMA_ORIGINS = "http://localhost,https://localhost,http://localhost:*,https://localhost:*,http://127.0.0.1,https://127.0.0.1,http://127.0.0.1:*,https://127.0.0.1:*,${svc "ollama"}";
     };
   };
 
