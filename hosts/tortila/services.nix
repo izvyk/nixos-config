@@ -22,7 +22,7 @@ in
   services.homepage-dashboard = {
     enable = true;
     listenPort = 2200;
-    allowedHosts = "localhost,127.0.0.1";
+    allowedHosts = "localhost,127.0.0.1,${config.networking.hostName}.${tailnet}";
 
     # Point this to a secure file outside the nix store (e.g., via sops-nix or agenix)
     environmentFiles = [ config.age.secrets.homepage_env.path ];
@@ -292,6 +292,9 @@ in
     environmentVariables = {
       OLLAMA_KEEP_ALIVE = "5m"; # unload model after 5min idle to save RAM
       OLLAMA_NUM_THREADS = "6";
+      # Allow browser requests forwarded by Caddy on the tailnet vhost.
+      # Note: OLLAMA_HOST stays 127.0.0.1 — only the UI/API go through Caddy.
+      OLLAMA_ORIGINS = "http://localhost,https://localhost,http://localhost:*,https://localhost:*,http://127.0.0.1,https://127.0.0.1,http://127.0.0.1:*,https://127.0.0.1:*,https://${config.networking.hostName}.${tailnet},https://${config.networking.hostName}.${tailnet}:*";
     };
   };
 

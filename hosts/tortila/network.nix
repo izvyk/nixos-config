@@ -199,15 +199,27 @@ in
   networking.nftables.enable = true;
   networking.firewall = {
     enable = true;
-    # Always allow traffic from your Tailscale network
-    trustedInterfaces = [ "tailscale0" ];
+    # tailscale0 is deliberately NOT trusted: every tailnet peer (including
+    # compromised devices) gets only the ports listed below, not the whole host.
+    trustedInterfaces = [ ];
     # Allow the Tailscale UDP port through the firewall
     allowedUDPPorts = [ config.services.tailscale.port ];
+    # Loose RPF: host is multihomed (wired + wireless) and an exit node.
     checkReversePath = "loose";
     interfaces."tailscale0" = {
       allowedTCPPorts = [
-        443 # Immich
+        22 # SSH — removing this locks you out over the tailnet
+        443 # Homepage
+        7443 # Immich
         8443 # Paperless
+        9443 # n8n
+        11443 # Stirling-PDF
+        12443 # Ollama
+        13443 # Open-WebUI
+        14443 # Whisper
+        15443 # Transmute
+        16443 # Hermes
+        17443 # Anki (AnkiConnect)
       ];
     };
   };
@@ -242,13 +254,10 @@ in
     # Homepage on 443
     virtualHosts."${config.networking.hostName}.${tailnet}:443" = {
       extraConfig = ''
-                tls {
-                  get_certificate tailscale
-                }
-                reverse_proxy 127.0.0.1:${toString config.services.homepage-dashboard.listenPort} {
-        	  header_up Host 127.0.0.1
-        	  header_up -Origin
-        	}
+        tls {
+          get_certificate tailscale
+        }
+        reverse_proxy 127.0.0.1:${toString config.services.homepage-dashboard.listenPort}
       '';
     };
 
@@ -305,14 +314,10 @@ in
     # ollama on 12443
     virtualHosts."${config.networking.hostName}.${tailnet}:12443" = {
       extraConfig = ''
-                log
-                tls {
-                  get_certificate tailscale
-                }
-                reverse_proxy 127.0.0.1:${toString config.services.ollama.port} {
-        	  header_up Host 127.0.0.1:${toString config.services.ollama.port}
-        	  header_up -Origin
-        	}
+        tls {
+          get_certificate tailscale
+        }
+        reverse_proxy 127.0.0.1:${toString config.services.ollama.port}
       '';
     };
 
