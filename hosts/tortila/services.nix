@@ -141,13 +141,6 @@ in
               icon = "sh-hermes-agent";
             };
           }
-          {
-            "Anki" = {
-              description = "Headless Anki (AnkiConnect API)";
-              href = svc "anki";
-              icon = "sh-anki";
-            };
-          }
         ];
       }
     ];

@@ -278,9 +278,8 @@ in
       hermes.endpoints = {
         "tcp:443" = "http://127.0.0.1:9119";
       };
-      anki.endpoints = {
-        "tcp:443" = "http://127.0.0.1:8765";
-      };
+      # NOTE: the Anki container stays localhost-only on purpose — it is a
+      # backend for n8n automation, not something to open even to the tailnet.
       # Router over the tailnet: SSH passthrough plus its web UI.
       # (Previously set manually via CLI: tailscale serve
       # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
@@ -291,6 +290,28 @@ in
         "tcp:22" = "tcp://artemon.lan:22";
         "tcp:443" = "http://artemon.lan:80";
       };
+    };
+  };
+
+  # `serve set-config` only writes the local config; the host must also
+  # `advertise` each service to the control plane. Without this, any
+  # `tailscale serve reset` silently drops all advertisements (services show
+  # "0 hosts" in the admin console with no trace in the Nix config).
+  # Idempotent: re-advertising an already-advertised service is a no-op.
+  # NOTE: advertising is not approval — a fresh host still needs one-time
+  # Approve in the admin console (or autoApprovers in the tailnet policy).
+  systemd.services.tailscale-serve-advertise = {
+    description = "Advertise Tailscale Services from this host";
+    after = [ "tailscale-serve.service" ];
+    wants = [ "tailscale-serve.service" ];
+    wantedBy = [ "multi-user.target" ];
+    restartTriggers = [ config.services.tailscale.serve.configFile ];
+    script = lib.concatMapStrings (name: ''
+      ${lib.getExe config.services.tailscale.package} serve advertise svc:${name}
+    '') (builtins.attrNames config.services.tailscale.serve.services);
+    serviceConfig = {
+      Type = "oneshot";
+      RemainAfterExit = true;
     };
   };
 
