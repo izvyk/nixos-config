@@ -274,9 +274,14 @@ in
             # (Previously set manually via CLI: tailscale serve
             # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
             # HTTPS handler for the router admin page.)
+            # "tcp:443" = "http://..." is the config-file form of a `--https`
+            # endpoint: tailscaled terminates TLS with the service's cert
+            # and proxies plaintext to the backend — same as all svc: entries.
             "svc:artemon" = {
-              endpoints."tcp:22" = "tcp://artemon.lan:22";
-              web."artemon.${tailnet}:443".handlers."/".proxy = "http://artemon.lan:80";
+              endpoints = {
+                "tcp:22" = "tcp://artemon.lan:22";
+                "tcp:443" = "http://artemon.lan:80";
+              };
             };
           };
         }
