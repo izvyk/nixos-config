@@ -372,10 +372,10 @@ in
         "convert.${cloudflare-domain}" = "http://localhost:3313";
 
         # n8n: наружу открываются исключительно вебхуки
-          "n8n.${cloudflare-domain}" = {
-            service = "http://127.0.0.1:5678";
-            path = "^/(webhook|webhook-test)/.*";
-          };
+        "n8n.${cloudflare-domain}" = {
+          service = "http://127.0.0.1:5678";
+          path = "webhook";
+        };
       };
       default = "http_status:404";
     };
