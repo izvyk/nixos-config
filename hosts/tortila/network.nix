@@ -355,6 +355,16 @@ in
         reverse_proxy 127.0.0.1:9119
       '';
     };
+
+    # AnkiConnect API on 17443
+    virtualHosts."${config.networking.hostName}.${tailnet}:17443" = {
+      extraConfig = ''
+        tls {
+          get_certificate tailscale
+        }
+        reverse_proxy 127.0.0.1:8765
+      '';
+    };
   };
 
   age.secrets.cloudflared-tortila-tunnel = {

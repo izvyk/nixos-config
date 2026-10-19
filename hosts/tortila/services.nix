@@ -140,6 +140,13 @@ in
               icon = "sh-hermes-agent";
             };
           }
+          {
+            "Anki" = {
+              description = "Headless Anki (AnkiConnect API)";
+              href = "https://${config.networking.hostName}.${tailnet}:17443";
+              icon = "sh-anki";
+            };
+          }
         ];
       }
     ];
@@ -334,9 +341,11 @@ in
     };
   };
 
-  # Persistent data directory, created before container starts
+  # Persistent data directories, created before containers start
   systemd.tmpfiles.rules = [
     "d /var/lib/transmute 0750 root root -"
+    "d /var/lib/anki 0750 root root -"
+    "d /var/lib/anki-export 0750 root root -"
   ];
 
   age.secrets.cloudflared-convert-oidc = {
@@ -389,6 +398,24 @@ in
           HERMES_DASHBOARD = "1";
         };
         environmentFiles = [ config.age.secrets.hermes-env.path ];
+      };
+
+      # Headless Anki with AnkiConnect on :8765.
+      # NOTE: the image cannot log into AnkiWeb on its own. After first deploy,
+      # connect once via VNC (QT_QPA_PLATFORM defaults to "vnc", port 5900) and
+      # enable AnkiWeb sync in the profile (Tools → Preferences → Syncing).
+      # The login token then persists in /var/lib/anki, so sync survives restarts.
+      anki = {
+        image = "thisisnttheway/headless-anki:latest";
+        autoStart = true;
+        ports = [
+          "127.0.0.1:8765:8765" # AnkiConnect API
+          "127.0.0.1:5900:5900" # VNC for one-time AnkiWeb login / debugging
+        ];
+        volumes = [
+          "/var/lib/anki:/data"
+          "/var/lib/anki-export:/export"
+        ];
       };
     };
   };
