@@ -221,6 +221,10 @@ in
 
   services.tailscale = {
     enable = true;
+    # Unstable daemon: Services cert issuance (TLS on svc: names) is under
+    # active development; stable 1.98 fails ACME orders for service names.
+    # The serve *module* is identical in both channels, only the daemon matters.
+    package = pkgs.unstable.tailscale;
     extraSetFlags = [ "--advertise-exit-node" ];
     extraUpFlags = [ ];
   };
