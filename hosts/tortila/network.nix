@@ -7,6 +7,22 @@
 let
   tailnet = "shorthair-inconnu.ts.net";
   cloudflare-domain = "netak.li";
+  # Tailscale Services hosted on this machine (bare names; units below add
+  # the `svc:` prefix where needed). Single source of truth for both the
+  # serve and advertise units.
+  serveNames = [
+    "home"
+    "immich"
+    "paperless"
+    "n8n"
+    "stirling"
+    "ollama"
+    "open-webui"
+    "whisper"
+    "transmute"
+    "hermes"
+    "artemon"
+  ];
 in
 {
   _module.args = {
@@ -232,9 +248,6 @@ in
   # This avoids the "iptables-compat" translation layer issues.
   systemd.services.tailscaled.serviceConfig.Environment = [
     "TS_DEBUG_FIREWALL_MODE=nftables"
-    # Verbose ACME exchange logging for the Services TLS cert issue
-    # (SetDNS 500 on _acme-challenge records). Remove once certs issue cleanly.
-    "TS_DEBUG_ACME=true"
   ];
 
   systemd.services.tailscaled = {
@@ -249,75 +262,67 @@ in
   # plaintext HTTP to the local backends. Prefer one entry per service —
   # sharing a single svc: name would lose the unique names and is only
   # useful for HA/failover across hosts, which we don't have.
-  # NOTE: the protocol in endpoint *values* matters: "tcp:443" = "https://…"
-  # is L7 with TLS termination (config-file form of `--https`), while
-  # "http://…" would be a raw L4 TCP forward with no TLS. Only the SSH
-  # endpoint stays tcp://.
-  # NOTE: serve set-config --all REPLACES the whole serve config, so any
-  # manually added endpoint (e.g. via `tailscale serve` CLI) must also be
-  # declared here or it gets wiped on next rebuild.
-  services.tailscale.serve = {
-    enable = true;
-    services = {
-      home.endpoints = {
-        "tcp:443" = "https://127.0.0.1:${toString config.services.homepage-dashboard.listenPort}";
-      };
-      immich.endpoints = {
-        "tcp:443" = "https://127.0.0.1:${toString config.services.immich.port}";
-      };
-      paperless.endpoints = {
-        "tcp:443" = "https://127.0.0.1:${toString config.services.paperless.port}";
-      };
-      n8n.endpoints = {
-        "tcp:443" = "https://127.0.0.1:5678";
-      };
-      stirling.endpoints = {
-        "tcp:443" = "https://127.0.0.1:2211";
-      };
-      ollama.endpoints = {
-        "tcp:443" = "https://127.0.0.1:${toString config.services.ollama.port}";
-      };
-      open-webui.endpoints = {
-        "tcp:443" = "https://127.0.0.1:${toString config.services.open-webui.port}";
-      };
-      whisper.endpoints = {
-        "tcp:443" = "https://127.0.0.1:2214";
-      };
-      transmute.endpoints = {
-        "tcp:443" = "https://127.0.0.1:3313";
-      };
-      hermes.endpoints = {
-        "tcp:443" = "https://127.0.0.1:9119";
-      };
-      # NOTE: the Anki container stays localhost-only on purpose — it is a
-      # backend for n8n automation, not something to open even to the tailnet.
-      # Router over the tailnet: SSH passthrough plus its web UI.
-      # (Previously set manually via CLI: tailscale serve
-      # --service=svc:artemon --tcp=22 tcp://artemon.lan:22, plus an
-      # HTTPS handler for the router admin page.)
-      artemon.endpoints = {
-        "tcp:22" = "tcp://artemon.lan:22";
-        "tcp:443" = "https://artemon.lan:80";
+  #
+  # Served purely via CLI-wrapping units below: the NixOS
+  # `services.tailscale.serve.services` schema (and raw config files) cannot
+  # express the needed combo — `--https=443` TLS termination up front with a
+  # plaintext `http://…` backend. The config-file equivalent
+  # ("tcp:443" = "https://…") would ALSO require TLS on the backend,
+  # which our apps don't speak, and plain "http://…" values are raw L4
+  # TCP forwards with no TLS at all.
+  # NOTE: the Anki container stays localhost-only on purpose — it is a
+  # backend for n8n automation, not something to open even to the tailnet.
+  systemd.services.tailscale-serve-l7 =
+    let
+      tailscale = lib.getExe config.services.tailscale.package;
+      https = svc: target: "${tailscale} serve --service=${svc} --https=443 ${target}";
+      tcp =
+        svc: port: target:
+        "${tailscale} serve --service=${svc} --tcp=${toString port} ${target}";
+      # NOTE: the SSH endpoint stays a raw L4 forward — no TLS involved.
+      endpoints = lib.concatLines [
+        (https "svc:home" "http://127.0.0.1:${toString config.services.homepage-dashboard.listenPort}")
+        (https "svc:immich" "http://127.0.0.1:${toString config.services.immich.port}")
+        (https "svc:paperless" "http://127.0.0.1:${toString config.services.paperless.port}")
+        (https "svc:n8n" "http://127.0.0.1:5678")
+        (https "svc:stirling" "http://127.0.0.1:2211")
+        (https "svc:ollama" "http://127.0.0.1:${toString config.services.ollama.port}")
+        (https "svc:open-webui" "http://127.0.0.1:${toString config.services.open-webui.port}")
+        (https "svc:whisper" "http://127.0.0.1:2214")
+        (https "svc:transmute" "http://127.0.0.1:3313")
+        (https "svc:hermes" "http://127.0.0.1:9119")
+        (https "svc:artemon" "http://artemon.lan:80")
+        (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
+      ];
+    in
+    {
+      description = "Create L7 HTTPS endpoints for Tailscale Services";
+      after = [ "tailscaled.service" ];
+      wants = [ "tailscaled.service" ];
+      wantedBy = [ "multi-user.target" ];
+      # Idempotent: re-running the same serve command is a no-op, and NixOS
+      # restarts the unit whenever `script` changes (i.e. on every edit here).
+      script = endpoints;
+      serviceConfig = {
+        Type = "oneshot";
+        RemainAfterExit = true;
       };
     };
-  };
 
-  # `serve set-config` only writes the local config; the host must also
-  # `advertise` each service to the control plane. Without this, any
-  # `tailscale serve reset` silently drops all advertisements (services show
-  # "0 hosts" in the admin console with no trace in the Nix config).
-  # Idempotent: re-advertising an already-advertised service is a no-op.
+  # `tailscale serve --service=…` configures AND advertises in one go, but a
+  # later `serve reset` (or any state loss) silently drops advertisements —
+  # services show "0 hosts" with no trace in the Nix config. This unit
+  # re-advertises everything after the L7 unit. Idempotent no-op otherwise.
   # NOTE: advertising is not approval — a fresh host still needs one-time
   # Approve in the admin console (or autoApprovers in the tailnet policy).
   systemd.services.tailscale-serve-advertise = {
     description = "Advertise Tailscale Services from this host";
-    after = [ "tailscale-serve.service" ];
-    wants = [ "tailscale-serve.service" ];
+    after = [ "tailscale-serve-l7.service" ];
+    wants = [ "tailscale-serve-l7.service" ];
     wantedBy = [ "multi-user.target" ];
-    restartTriggers = [ config.services.tailscale.serve.configFile ];
     script = lib.concatMapStrings (name: ''
       ${lib.getExe config.services.tailscale.package} serve advertise svc:${name}
-    '') (builtins.attrNames config.services.tailscale.serve.services);
+    '') serveNames;
     serviceConfig = {
       Type = "oneshot";
       RemainAfterExit = true;
