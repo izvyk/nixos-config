@@ -232,6 +232,9 @@ in
   # This avoids the "iptables-compat" translation layer issues.
   systemd.services.tailscaled.serviceConfig.Environment = [
     "TS_DEBUG_FIREWALL_MODE=nftables"
+    # Verbose ACME exchange logging for the Services TLS cert issue
+    # (SetDNS 500 on _acme-challenge records). Remove once certs issue cleanly.
+    "TS_DEBUG_ACME=true"
   ];
 
   systemd.services.tailscaled = {
