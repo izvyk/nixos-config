@@ -21,6 +21,7 @@ let
     "whisper"
     "transmute"
     "hermes"
+    "hermes-api"
     "artemon"
   ];
 in
@@ -291,6 +292,7 @@ in
         (https "svc:whisper" "http://127.0.0.1:2214")
         (https "svc:transmute" "http://127.0.0.1:3313")
         (https "svc:hermes" "http://127.0.0.1:9119")
+        (https "svc:hermes-api" "http://127.0.0.1:8642")
         (https "svc:artemon" "http://artemon.lan:80")
         (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
       ];
