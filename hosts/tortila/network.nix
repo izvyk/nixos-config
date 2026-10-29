@@ -81,13 +81,11 @@ in
         RouteMetric = 100;
       };
 
-      # Prefer wired over wireless for IPv6 as well. Covers both ways the
-      # default route can arrive: DHCPv6 and Router Advertisements (typical
-      # on home LANs). No static gateway — RA/DHCPv6 install the real one.
-      dhcpV6Config = {
-        RouteMetric = 100;
-      };
-
+      # Prefer wired over wireless for IPv6 as well. The default route on a
+      # home LAN arrives via Router Advertisements, so this is the knob that
+      # matters. (No dhcpV6Config here: this nixpkgs' networkd module does
+      # not accept RouteMetric in [DHCPv6], and DHCPv6 rarely carries routes
+      # anyway. No static gateway — RA installs the real one.)
       ipv6AcceptRAConfig = {
         RouteMetric = 100;
       };
@@ -107,10 +105,6 @@ in
 
       dhcpV4Config = {
         # Use route metrics to prioritize wired interfaces over wireless if both are connected
-        RouteMetric = 202;
-      };
-
-      dhcpV6Config = {
         RouteMetric = 202;
       };
 
