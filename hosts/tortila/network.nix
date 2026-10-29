@@ -81,15 +81,16 @@ in
         RouteMetric = 100;
       };
 
-      # dhcpV6Config = {
-      #   RouteMetric = 100;
-      # };
-      routes = [
-        {
-          Gateway = "::";
-          Metric = 100;
-        }
-      ];
+      # Prefer wired over wireless for IPv6 as well. Covers both ways the
+      # default route can arrive: DHCPv6 and Router Advertisements (typical
+      # on home LANs). No static gateway — RA/DHCPv6 install the real one.
+      dhcpV6Config = {
+        RouteMetric = 100;
+      };
+
+      ipv6AcceptRAConfig = {
+        RouteMetric = 100;
+      };
 
       linkConfig.RequiredForOnline = "routable";
     };
@@ -109,16 +110,13 @@ in
         RouteMetric = 202;
       };
 
-      # dhcpV6Config = {
-      #   RouteMetric = 202;
-      # };
+      dhcpV6Config = {
+        RouteMetric = 202;
+      };
 
-      routes = [
-        {
-          Gateway = "::";
-          Metric = 200;
-        }
-      ];
+      ipv6AcceptRAConfig = {
+        RouteMetric = 202;
+      };
 
       # Ensure the interface is required to be operational before critical downstream daemons start
       linkConfig.RequiredForOnline = "routable";
@@ -143,7 +141,11 @@ in
         "hmac-sha2-512-etm@openssh.com"
         "hmac-sha2-256-etm@openssh.com"
         "umac-128-etm@openssh.com"
-        "hmac-sha2-512" # For solidExplorer
+        # Needed by Solid Explorer's SFTP client (no ETM support there).
+        # MACs can't be scoped in a Match block, so this applies to all
+        # connections — accepted tradeoff: sshd is only reachable from the
+        # tailnet (firewall opens 22 on tailscale0 only) plus physical console.
+        "hmac-sha2-512"
       ];
     };
     extraConfig = ''
@@ -159,7 +161,12 @@ in
   };
 
   systemd.tmpfiles.rules = [
+    # Chroot dir must stay root-owned 0755 (sshd requirement); the
+    # subdirs are mountpoints — created here so the bind mounts below
+    # don't fail on a fresh boot.
     "d /srv/sftp/backupreader 0755 root root -"
+    "d /srv/sftp/backupreader/laptop 0755 root root -"
+    "d /srv/sftp/backupreader/masterdata 0755 root root -"
   ];
 
   fileSystems."/srv/sftp/backupreader/laptop" = {
@@ -195,11 +202,10 @@ in
 
   programs.ssh = {
     extraConfig = ''
-      Match User root
-        Host github.com
-          User git
-          IdentityFile /root/.ssh/ssh_ed25519_github
-          IdentitiesOnly yes
+      Match User root Host github.com
+        User git
+        IdentityFile /root/.ssh/ssh_ed25519_github
+        IdentitiesOnly yes
     '';
 
     knownHosts."github.com".publicKey =
@@ -301,9 +307,13 @@ in
       description = "Create L7 HTTPS endpoints for Tailscale Services";
       after = [ "tailscaled.service" ];
       wants = [ "tailscaled.service" ];
+      bindsTo = [ "tailscaled.service" ];
+      partOf = [ "tailscaled.service" ];
       wantedBy = [ "multi-user.target" ];
       # Idempotent: re-running the same serve command is a no-op, and NixOS
       # restarts the unit whenever `script` changes (i.e. on every edit here).
+      # Restarts together with tailscaled so a daemon restart (or late login)
+      # re-applies the config instead of silently staying down.
       script = endpoints;
       serviceConfig = {
         Type = "oneshot";
@@ -319,8 +329,16 @@ in
   # Approve in the admin console (or autoApprovers in the tailnet policy).
   systemd.services.tailscale-serve-advertise = {
     description = "Advertise Tailscale Services from this host";
-    after = [ "tailscale-serve-l7.service" ];
+    after = [
+      "tailscaled.service"
+      "tailscale-serve-l7.service"
+    ];
     wants = [ "tailscale-serve-l7.service" ];
+    bindsTo = [
+      "tailscaled.service"
+      "tailscale-serve-l7.service"
+    ];
+    partOf = [ "tailscale-serve-l7.service" ];
     wantedBy = [ "multi-user.target" ];
     script = lib.concatMapStrings (name: ''
       ${lib.getExe config.services.tailscale.package} serve advertise svc:${name}
@@ -339,16 +357,26 @@ in
 
   services.cloudflared = {
     enable = true;
+    # Unstable tracks cloudflared releases faster than stable (stable is
+    # stuck on 2026.5.2). The eMudhra mitigation lives in Go's crypto/x509
+    # (unstable already builds with go1.27.3), not in cloudflared itself.
+    package = pkgs.unstable.cloudflared;
     tunnels."81f0efdc-2c1f-4e98-a948-a598866e4039" = {
       credentialsFile = config.age.secrets.cloudflared-tortila-tunnel.path;
       ingress = {
         "pdf.${cloudflare-domain}" = "http://localhost:2211";
         "convert.${cloudflare-domain}" = "http://localhost:3313";
 
-        # n8n: наружу открываются исключительно вебхуки
+        # n8n: наружу открываются исключительно production-вебхуки.
+        # cloudflared сопоставляет path как префикс пути запроса. Тестовые
+        # триггеры (/webhook-test/…) намеренно исключены: они выполняют
+        # workflow в test-режиме и возвращают вывод в HTTP-ответе, что
+        # может утекать секреты. Для отладки используйте tailnet-имя
+        # (https://n8n.<tailnet>/webhook-test/…) — редактор доступен там.
+        # Остальное на этом хосте падает в `default = http_status:404` ниже.
         "n8n.${cloudflare-domain}" = {
           service = "http://127.0.0.1:5678";
-          path = "webhook";
+          path = "/webhook/*";
         };
       };
       default = "http_status:404";

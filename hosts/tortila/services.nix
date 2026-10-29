@@ -219,7 +219,13 @@ in
   services.n8n = {
     enable = true;
     environment = {
-      N8N_SECURE_COOKIE = "false";
+      # Backend is plaintext HTTP on loopback; TLS is terminated by
+      # tailscaled (tailnet) and cloudflared (public webhooks) in front.
+      # Secure cookies require the browser-facing HTTPS scheme.
+      N8N_SECURE_COOKIE = "true";
+      N8N_LISTEN_ADDRESS = "127.0.0.1";
+      N8N_PORT = "5678";
+      N8N_PROTOCOL = "http";
       WEBHOOK_URL = "https://n8n.${cloudflare-domain}/";
       N8N_EDITOR_BASE_URL = svc "n8n";
       N8N_RUNNERS_ENABLED = "true";
