@@ -360,6 +360,7 @@ in
       ingress = {
         "pdf.${cloudflare-domain}" = "http://localhost:2211";
         "convert.${cloudflare-domain}" = "http://localhost:3313";
+        "chat.${cloudflare-domain}" = "http://localhost:2213";
 
         # n8n: наружу открываются исключительно production-вебхуки.
         # cloudflared сопоставляет path как префикс пути запроса. Тестовые

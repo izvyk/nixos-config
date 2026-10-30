@@ -18,6 +18,7 @@ in
   "cloudflared-tortila-tunnel.age".publicKeys = [ serverRoot ];
   "cloudflared-convert-oidc.age".publicKeys = [ serverRoot ];
   "n8n-runners-auth-token.age".publicKeys = [ serverRoot ];
+  "open-webui-env.age".publicKeys = [ serverRoot ];
   "hermes-env.age".publicKeys = [ serverRoot ];
   "backup-luks.age".publicKeys = [ serverRoot ];
 }

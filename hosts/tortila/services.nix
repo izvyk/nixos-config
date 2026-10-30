@@ -298,13 +298,28 @@ in
     };
   };
 
+  age.secrets.open-webui-env = {
+    file = ../../secrets/open-webui-env.age;
+    owner = "root";
+    mode = "0400";
+  };
+
   services.open-webui = {
     enable = true;
     port = 2213;
+    environmentFile = config.age.secrets.open-webui-env.path;
     environment = {
-      # OLLAMA_API_BASE_URL = "https://${config.networking.hostName}.${tailnet}";
-      # Disables the login screen so you can use it immediately locally
-      WEBUI_AUTH = "False";
+      # Public URL behind the Cloudflare Tunnel (used for generated links).
+      WEBUI_URL = "https://chat.${cloudflare-domain}";
+      # Native email/password login. This is the form you get on the tailnet.
+      # On the public URL, a Cloudflare Access app (Google IdP) gates the
+      # tunnel in front of this same form — no second SSO inside the app.
+      WEBUI_AUTH = "True";
+      ENABLE_SIGNUP = "True";
+      ENABLE_LOGIN_FORM = "True";
+      # WEBUI_SECRET_KEY (mandatory with auth on) comes from environmentFile
+      # so it never lands in the world-readable Nix store. The secret file
+      # holds a single line: WEBUI_SECRET_KEY=<long random hex>.
       ANONYMIZED_TELEMETRY = "False";
       DO_NOT_TRACK = "True";
       SCARF_NO_ANALYTICS = "True";
