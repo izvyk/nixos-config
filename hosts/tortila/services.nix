@@ -309,13 +309,10 @@ in
     port = 2213;
     environmentFile = config.age.secrets.open-webui-env.path;
     environment = {
-      # Public URL behind the Cloudflare Tunnel (used for generated links).
-      WEBUI_URL = "https://chat.${cloudflare-domain}";
-      # Native email/password login. This is the form you get on the tailnet.
-      # On the public URL, a Cloudflare Access app (Google IdP) gates the
-      # tunnel in front of this same form — no second SSO inside the app.
+      # Native email/password login, tailnet-only. No Cloudflare exposure:
+      # the public front door for family is the Hermes Telegram bot.
+      WEBUI_URL = svc "open-webui";
       WEBUI_AUTH = "True";
-      ENABLE_SIGNUP = "True";
       ENABLE_LOGIN_FORM = "True";
       # WEBUI_SECRET_KEY (mandatory with auth on) comes from environmentFile
       # so it never lands in the world-readable Nix store. The secret file
@@ -402,7 +399,9 @@ in
       };
 
       hermes = {
-        image = "nousresearch/hermes-agent:v2026.8.3";
+        # Pinned to a stable release; upstream publishes moving `:stable`
+        # too, but an explicit version keeps deploys reproducible.
+        image = "nousresearch/hermes-agent:v0.22.5";
         cmd = [
           "gateway"
           "run"
@@ -413,6 +412,7 @@ in
         ];
         volumes = [ "/var/lib/hermes:/opt/data" ];
         environment = {
+          # HERMES_HOME in the image is /opt/data, seeded from the volume.
           HERMES_DASHBOARD = "1";
         };
         environmentFiles = [ config.age.secrets.hermes-env.path ];
