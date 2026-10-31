@@ -94,6 +94,7 @@ in
         # yandex-music
         unstable.zed-editor
         unstable.claude-code
+        unstable.claude-agent-acp
         bubblewrap
         # unstable.opencode
         # unstable.pi-coding-agent
