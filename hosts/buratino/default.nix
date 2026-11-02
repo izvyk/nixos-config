@@ -304,8 +304,11 @@ in
 
   programs.fish.enable = true;
   environment.shellAliases = lib.mkForce {}; # Don't add aliases to the shell
-  # Hooks into fish and sets up nix-direnv.
-  programs.direnv.enable = true;
+  # direnv with nix-direnv; the fish hook is in chezmoi (portable).
+  programs.direnv = {
+    enable = true;
+    enableFishIntegration = false;
+  };
   environment.systemPackages = with pkgs; [
     linux-firmware
     bat
