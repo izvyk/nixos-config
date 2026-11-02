@@ -188,9 +188,7 @@ in
         '';
         # No XDG_RUNTIME_DIR here, so t3 skips its per-agent systemd --user
         # scopes and agents stay in this unit's cgroup: the container's limits
-        # apply and a stop kills them all. Hardening beyond NoNewPrivileges
-        # adds little inside this single-purpose container, and the usual
-        # extras would break Chrome's sandbox, nix and the JITs.
+        # apply and a stop kills them all.
         serviceConfig = {
           ExecStart = "${lib.getExe' t3pkg "t3"} serve --host ${localAddress} --port 3773";
           User = "t3code";
@@ -199,7 +197,35 @@ in
           Restart = "on-failure";
           RestartSec = 5;
           LimitNOFILE = 65536;
+
+          # Second layer: no setuid helpers, nothing writable outside home and
+          # /tmp, no /dev/net/tun (which the container has), no kernel log
+          # reading, and less kernel surface for an exploit to start from.
+          # Chrome's sandbox needs user/pid/net namespaces and chroot; the
+          # JITs rule out MemoryDenyWriteExecute. Options the container
+          # already guarantees (kernel tunables, modules, clock, …) are left
+          # out.
           NoNewPrivileges = true;
+          ProtectSystem = "strict";
+          ReadWritePaths = [ "/var/lib/t3code" ];
+          PrivateTmp = true;
+          PrivateDevices = true;
+          ProtectKernelLogs = true;
+          LockPersonality = true;
+          RestrictNamespaces = "user pid net";
+          RestrictAddressFamilies = [
+            "AF_UNIX"
+            "AF_INET"
+            "AF_INET6"
+            "AF_NETLINK"
+          ];
+          SystemCallArchitectures = "native";
+          SystemCallFilter = [
+            "@system-service"
+            "chroot"
+          ];
+          # Fail odd syscalls of arbitrary dev tooling instead of killing it.
+          SystemCallErrorNumber = "EPERM";
         };
       };
     };
