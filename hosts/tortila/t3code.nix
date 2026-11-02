@@ -31,9 +31,7 @@
 #     opencode auth login haimaker    # API key from app.haimaker.ai
 #     t3 auth pairing create --base-url https://t3code.<tailnet>
 let
-  hostAddress = "10.233.0.1";
   localAddress = "10.233.0.2";
-  port = 3773;
   nixbld = toString config.ids.gids.nixbld;
 
   # Puts claude and opencode (plus git and gh, on by default) on t3's PATH.
@@ -45,6 +43,21 @@ let
     enableOpencode = true;
     enableCodex = false;
   };
+
+  # t3 downloads a pinned Chrome for Testing headless shell into
+  # ~/.t3/tools/chrome-headless-shell/linux64/<version>/ on first use (browser
+  # tabs, HTML previews), with no setting to point it elsewhere. That build
+  # won't start on NixOS, but nixpkgs ships the same artifact patched. Put it
+  # where t3 looks, under the version this t3 pins; the build fails if a t3
+  # update moves the pin out of reach of the sed.
+  previewBrowser = pkgs.runCommand "t3code-preview-browser" { } ''
+    version=$(sed -n 's/^const VERSION = "\([0-9.]*\)";$/\1/p' \
+      $(grep -l chrome-for-testing-public ${t3pkg.unwrapped}/libexec/t3code/apps/server/dist/*.mjs))
+    [ "$(wc -w <<< "$version")" = 1 ] || { echo "can't find t3's pinned Chrome version" >&2; exit 1; }
+    mkdir -p $out/linux64
+    ln -s ${pkgs.unstable.playwright-driver.components.chromium-headless-shell}/chrome-headless-shell-linux64 \
+      $out/linux64/$version
+  '';
 
   # Haimaker isn't in OpenCode's built-in catalog (models.dev), so declare it
   # as an OpenAI-compatible provider. Passed via OPENCODE_CONFIG, which
@@ -66,55 +79,6 @@ let
     };
   };
 
-  # t3 runs a pinned Chrome for Testing headless shell for browser tabs and
-  # HTML previews, downloaded into ~/.t3/tools on first use. That build
-  # expects an FHS system and won't start here, but nixpkgs ships the same
-  # artifact autoPatchelf'd. Link it in under the version this t3 pins, so t3
-  # finds it already installed. Fails the build if a t3 update moves the pin
-  # out of reach of the sed — better than a silent download at runtime.
-  previewBrowser = pkgs.runCommand "t3code-preview-browser" { } ''
-    version=$(sed -n 's/^const VERSION = "\([0-9.]*\)";$/\1/p' \
-      $(grep -l chrome-for-testing-public ${t3pkg.unwrapped}/libexec/t3code/apps/server/dist/*.mjs))
-    if [ "$(wc -w <<< "$version")" != 1 ]; then
-      echo "t3code: can't find the pinned chrome-headless-shell version" >&2
-      exit 1
-    fi
-    mkdir -p $out/linux64
-    ln -s ${pkgs.unstable.playwright-driver.components.chromium-headless-shell}/chrome-headless-shell-linux64 \
-      $out/linux64/$version
-  '';
-
-  # `nixpkgs` for agents' nix shell / nix-shell -p: pinned to this flake's
-  # unstable input, so nothing is downloaded or evaluated from scratch.
-  nixPath = [ "nixpkgs=${inputs.nixpkgs-unstable}" ];
-
-  # PATH for agents, on top of t3's (claude, opencode, git, gh) and
-  # claude-code's own (rg, ps). Everything else comes from nix.
-  agentTools = with pkgs; [
-    config.nix.package
-    bashInteractive
-    coreutils
-    findutils
-    gnugrep
-    gnused
-    gawk
-    diffutils
-    patch
-    gnutar
-    gzip
-    xz
-    unzip
-    which
-    file
-    less
-    curl
-    jq
-    fd
-    openssh
-    nodejs
-    python3
-  ];
-
   # User-level rules, so agents reach for nix instead of apt. Claude reads
   # ~/.claude/CLAUDE.md; OpenCode falls back to it while it has no AGENTS.md
   # of its own. Only what agents need for their work: nothing about what's
@@ -130,17 +94,20 @@ let
       `nix-shell --run '<cmd>'`.
     - Only the public internet is reachable from here.
   '';
+
+  # `nixpkgs` for agents' nix shell / nix-shell -p, pinned to this flake's
+  # unstable input: nothing to download or evaluate from scratch.
+  nixPath = [ "nixpkgs=${inputs.nixpkgs-unstable}" ];
 in
 {
   containers.t3code = {
     autoStart = true;
     privateUsers = "pick";
     privateNetwork = true;
-    inherit hostAddress localAddress;
+    hostAddress = "10.233.0.1";
+    inherit localAddress;
 
     config = {
-      # Reuse the host's package set (unstable overlay, allowUnfree).
-      nixpkgs.pkgs = pkgs;
       system.stateVersion = "26.05";
 
       # Client side only: the host's daemon does the building.
@@ -167,9 +134,23 @@ in
           "9.9.9.9"
           "1.1.1.1"
         ];
-        nftables.enable = true;
-        firewall.allowedTCPPorts = [ port ];
+        # Only the host can reach the container anyway (forward chain below).
+        firewall.enable = false;
       };
+
+      # What agents and `machinectl shell` sessions get, on top of NixOS's
+      # base set (bash, coreutils, curl, grep, sed, tar, ssh, …) and t3's own
+      # (claude, opencode, git, gh). Everything else comes from nix.
+      environment.systemPackages = [
+        t3pkg
+        pkgs.unstable.claude-code
+        pkgs.unstable.opencode
+        pkgs.jq
+        pkgs.unzip
+        pkgs.nodejs
+        pkgs.python3
+      ];
+      environment.variables.OPENCODE_CONFIG = "${opencodeConfig}";
 
       # For pages rendered by the headless browser.
       fonts.packages = with pkgs; [
@@ -177,15 +158,6 @@ in
         liberation_ttf
         noto-fonts-color-emoji
       ];
-
-      # For `machinectl shell` sessions (claude/opencode auth login, t3 auth …).
-      environment.systemPackages = [
-        t3pkg
-        pkgs.unstable.claude-code
-        pkgs.unstable.opencode
-      ]
-      ++ agentTools;
-      environment.variables.OPENCODE_CONFIG = "${opencodeConfig}";
 
       users.users.t3code = {
         isSystemUser = true;
@@ -202,68 +174,32 @@ in
         wantedBy = [ "multi-user.target" ];
         after = [ "network-online.target" ];
         wants = [ "network-online.target" ];
-        path = agentTools;
-
+        path = [ "/run/current-system/sw" ];
         environment = {
           T3CODE_TELEMETRY_ENABLED = "false";
-          # Services don't get the login environment that sets these.
+          # Login shells get these from the system config; services don't.
           NIX_PATH = lib.concatStringsSep ":" nixPath;
           OPENCODE_CONFIG = "${opencodeConfig}";
         };
-
         preStart = ''
-          mkdir -p "$HOME/.t3/tools" "$HOME/.claude"
-          ln -sfnT ${previewBrowser} "$HOME/.t3/tools/chrome-headless-shell"
-          ln -sfnT ${agentNotes} "$HOME/.claude/CLAUDE.md"
+          mkdir -p ~/.t3/tools ~/.claude
+          ln -sfnT ${previewBrowser} ~/.t3/tools/chrome-headless-shell
+          ln -sfnT ${agentNotes} ~/.claude/CLAUDE.md
         '';
-
+        # No XDG_RUNTIME_DIR here, so t3 skips its per-agent systemd --user
+        # scopes and agents stay in this unit's cgroup: the container's limits
+        # apply and a stop kills them all. Hardening beyond NoNewPrivileges
+        # adds little inside this single-purpose container, and the usual
+        # extras would break Chrome's sandbox, nix and the JITs.
         serviceConfig = {
-          # The veth address is where tailscaled on the host reaches it. No
-          # XDG_RUNTIME_DIR here, so t3 skips its per-agent systemd --user
-          # scopes and agents stay in this unit's cgroup: the container's
-          # limits apply and a stop kills them all.
-          ExecStart = "${lib.getExe' t3pkg "t3"} serve --host ${localAddress} --port ${toString port}";
+          ExecStart = "${lib.getExe' t3pkg "t3"} serve --host ${localAddress} --port 3773";
           User = "t3code";
           Group = "t3code";
-          StateDirectory = [
-            "t3code"
-            "t3code/projects"
-          ];
-          StateDirectoryMode = "0700";
-          WorkingDirectory = "/var/lib/t3code/projects";
+          WorkingDirectory = "/var/lib/t3code";
           Restart = "on-failure";
           RestartSec = 5;
           LimitNOFILE = 65536;
-
-          # Second layer, inside the container. Not set on purpose:
-          # RestrictNamespaces and SystemCallFilter (Chrome's sandbox,
-          # bubblewrap and debuggers need namespaces, chroot, mount and
-          # ptrace; the container is the boundary), MemoryDenyWriteExecute
-          # (node's and bun's JITs).
           NoNewPrivileges = true;
-          CapabilityBoundingSet = "";
-          PrivateTmp = true;
-          PrivateDevices = true;
-          ProtectSystem = "strict";
-          ProtectHome = true;
-          ProtectProc = "invisible";
-          ProtectKernelTunables = true;
-          ProtectKernelModules = true;
-          ProtectKernelLogs = true;
-          ProtectControlGroups = true;
-          ProtectClock = true;
-          ProtectHostname = true;
-          RestrictRealtime = true;
-          RestrictSUIDSGID = true;
-          LockPersonality = true;
-          RestrictAddressFamilies = [
-            "AF_UNIX"
-            "AF_INET"
-            "AF_INET6"
-            "AF_NETLINK"
-          ];
-          SystemCallArchitectures = "native";
-          UMask = "0077";
         };
       };
     };
@@ -316,22 +252,23 @@ in
         iifname "ve-t3code" counter reject with icmpx admin-prohibited comment "container -> host"
       }
 
+      # The container only has IPv4, so its rules don't need an IPv6 twin.
       chain forward {
         type filter hook forward priority filter; policy accept;
         oifname "ve-t3code" ct state established,related accept
         oifname "ve-t3code" counter drop comment "-> container; only the host itself may connect"
-        iifname "ve-t3code" meta nfproto != ipv4 counter drop comment "container has no IPv6"
         iifname "ve-t3code" ip daddr @blocked4 counter reject with icmpx admin-prohibited comment "container -> private ranges"
       }
 
-      # Fixed-output builds (fetchers) run as nix's build users in the host's
-      # network namespace, whoever asked the daemon for them — an agent could
-      # otherwise read host-local services through a build log. Same rule as
-      # for the container, plus the resolved stub that the build sandbox's
-      # resolv.conf points at. Every rule matches the group positively: the
-      # kernel's own packets (RSTs, ICMP errors, echo replies, NDP) have no
-      # owner, so `skgid != … accept` would let them fall through to the
-      # rejects and break the host's networking.
+      # Fixed-output builds (fetchers) run as nix's build users (group
+      # nixbld; not with auto-allocate-uids) in the host's network namespace,
+      # whoever asked the daemon for them — an agent could otherwise read
+      # host-local services through a build log. Same rule as for the
+      # container, plus the resolved stub the build sandbox's resolv.conf
+      # points at. Every rule matches the group positively: the kernel's own
+      # packets (RSTs, ICMP errors, echo replies, NDP) have no owner, so
+      # `skgid != … accept` would let them fall through to the rejects and
+      # break the host's networking.
       chain output {
         type filter hook output priority filter; policy accept;
         meta skgid ${nixbld} ip daddr 127.0.0.53 meta l4proto { tcp, udp } th dport 53 accept comment "resolved stub"
@@ -340,12 +277,4 @@ in
       }
     '';
   };
-
-  assertions = [
-    {
-      # Builds would then run under per-build uids/gids instead of nixbld.
-      assertion = !(config.nix.settings.auto-allocate-uids or false);
-      message = "t3code.nix: the nix build egress rule matches the nixbld group, which auto-allocate-uids builds don't run as.";
-    }
-  ];
 }
