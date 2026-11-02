@@ -23,6 +23,7 @@ let
     "hermes"
     "hermes-api"
     "artemon"
+    "t3code"
   ];
 in
 {
@@ -293,6 +294,8 @@ in
         (https "svc:transmute" "http://127.0.0.1:3313")
         (https "svc:hermes" "http://127.0.0.1:9119")
         (https "svc:hermes-api" "http://127.0.0.1:8642")
+        # Not loopback: T3 Code lives in its own container (t3code.nix).
+        (https "svc:t3code" "http://${config.containers.t3code.localAddress}:3773")
         (https "svc:artemon" "http://artemon.lan:80")
         (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
       ];

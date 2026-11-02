@@ -28,6 +28,7 @@ in
     ./network.nix
     ../../modules/neovim.nix
     ./services.nix
+    ./t3code.nix
     ../../modules/nixpkgs-overlay.nix
 
     inputs.agenix.nixosModules.default
