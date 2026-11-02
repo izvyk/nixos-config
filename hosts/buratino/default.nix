@@ -33,6 +33,8 @@ in
     "${inputs.nixpkgs-unstable}/nixos/modules/config/fonts/fontconfig.nix"
 
     inputs.agenix.nixosModules.default
+    # nix-locate and fish's command-not-found hint, with a prebuilt database.
+    inputs.nix-index-database.nixosModules.nix-index
   ];
 
   disabledModules = [
@@ -302,13 +304,8 @@ in
 
   programs.fish.enable = true;
   environment.shellAliases = lib.mkForce {}; # Don't add aliases to the shell
-  # Tell direnv to hook into your fish shell
-  programs.fish.interactiveShellInit = ''
-    direnv hook fish | source
-  '';
-  environment.pathsToLink = [
-    "/share/nix-direnv"
-  ];
+  # Hooks into fish and sets up nix-direnv.
+  programs.direnv.enable = true;
   environment.systemPackages = with pkgs; [
     linux-firmware
     bat
@@ -320,9 +317,6 @@ in
     cryptsetup
     exfatprogs
     f2fs-tools
-
-    direnv
-    nix-direnv
 
     agenix
 
@@ -336,7 +330,6 @@ in
     tmux
     gparted
 
-    nix-index
     unstable.android-tools
 
     man-pages # Provides Linux programmer's manual
@@ -426,6 +419,9 @@ in
     QT_QPA_PLATFORM = "wayland";
     NIXOS_OZONE_WL = "1";
     GST_PLUGIN_PATH = "/run/current-system/sw/lib/gstreamer-1.0/";
+    # The T3 Code app forwards this to its local backend; that backend only
+    # runs until the local environment is switched off (agents run on tortila).
+    T3CODE_TELEMETRY_ENABLED = "false";
   };
 
   # # environment.etc = {

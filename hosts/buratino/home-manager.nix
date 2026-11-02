@@ -96,6 +96,13 @@ in
         unstable.claude-code
         unstable.claude-agent-acp
         bubblewrap
+        # Desktop client for tortila's T3 Code (Connections → Add environment).
+        # Unwrapped: the wrapper only adds agent CLIs (codex, gh, git) for a
+        # local backend, and agents don't run here.
+        unstable.t3code.unwrapped
+        # Config, roles and the fish key binding are in chezmoi.
+        aichat
+        poppler-utils # pdftotext, for `aichat -f file.pdf`
         # unstable.opencode
         # unstable.pi-coding-agent
         # unstable.antigravity-ide

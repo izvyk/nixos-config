@@ -186,6 +186,7 @@
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom6/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom7/"
+            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom8/"
           ];
         };
 
@@ -235,6 +236,12 @@
           binding = "<Super>period";
           command = "vicinae deeplink vicinae://launch/core/search-emojis";
           name = "Vicinae emoji picker";
+        };
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom8" = {
+          binding = "<Super>g";
+          command = "/home/${username}/.local/bin/de-fix";
+          name = "Correct German text in the clipboard";
         };
 
         "org/gnome/mutter" = {

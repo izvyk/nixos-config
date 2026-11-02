@@ -15,6 +15,13 @@
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
 
+    # Weekly prebuilt nix-index database: building it locally takes long and a
+    # lot of RAM.
+    nix-index-database = {
+      url = "github:nix-community/nix-index-database";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
+
     godbus-monitor = {
       url = "github:izvyk/godbus-monitor";
       flake = false;
