@@ -15,7 +15,7 @@
 #     (AnkiConnect, n8n, ollama, docker-published ports, …) don't exist in
 #     there. Egress is NATed and may reach the public internet only — no LAN,
 #     tailnet, docker bridges or the host itself (see t3code-isolation below).
-#   - capped memory/CPU/IO, and first in line for the OOM killer.
+#   - capped memory, swap, CPU and tasks; first in line for the OOM killer.
 # Agents get nix (nix shell, nix-shell -p, nix develop) through the host's
 # daemon. Fixed-output builds run in the host's network namespace, so they get
 # the same public-internet-only rule, for every user on this host.
@@ -34,15 +34,10 @@ let
   localAddress = "10.233.0.2";
   nixbld = toString config.ids.gids.nixbld;
 
-  # Puts claude and opencode (plus git and gh, on by default) on t3's PATH.
-  # OpenCode is the way to Muse Spark and other non-Anthropic models: nixpkgs
-  # builds it from source, while t3's dedicated Muse Code provider wants
-  # Meta's closed, self-updating CLI.
-  t3pkg = pkgs.unstable.t3code.override {
-    enableClaude = true;
-    enableOpencode = true;
-    enableCodex = false;
-  };
+  # Without codex. The wrapper puts git and gh on t3's PATH; claude and
+  # opencode come from systemPackages (on the unit's path), so `machinectl
+  # shell` has them for the logins too.
+  t3pkg = pkgs.unstable.t3code.override { enableCodex = false; };
 
   # t3 downloads a pinned Chrome for Testing headless shell into
   # ~/.t3/tools/chrome-headless-shell/linux64/<version>/ on first use (browser
@@ -139,11 +134,14 @@ in
       };
 
       # What agents and `machinectl shell` sessions get, on top of NixOS's
-      # base set (bash, coreutils, curl, grep, sed, tar, ssh, …) and t3's own
-      # (claude, opencode, git, gh). Everything else comes from nix.
+      # base set (bash, coreutils, curl, grep, sed, tar, ssh, …); agents also
+      # get git and gh from t3's wrapper. Everything else comes from nix.
       environment.systemPackages = [
         t3pkg
         pkgs.unstable.claude-code
+        # The way to Muse Spark and other non-Anthropic models: nixpkgs builds
+        # it from source, while t3's dedicated Muse Code provider wants Meta's
+        # closed, self-updating CLI.
         pkgs.unstable.opencode
         pkgs.jq
         pkgs.unzip
@@ -231,12 +229,13 @@ in
     };
   };
 
-  # Agents are the most expendable thing on this box.
+  # Agents are the most expendable thing on this box. MemoryMax doesn't cover
+  # swap. No IOWeight: only BFQ or io.cost honour it, and tortila has neither.
   systemd.services."container@t3code".serviceConfig = {
     MemoryHigh = "50%";
     MemoryMax = "60%";
+    MemorySwapMax = "4G";
     CPUWeight = 50;
-    IOWeight = 50;
     TasksMax = 4096;
     OOMScoreAdjust = 500;
   };
@@ -265,13 +264,6 @@ in
         }
       }
 
-      # Unspecified/loopback, ULA (LAN and tailnet), link-local, multicast.
-      set blocked6 {
-        type ipv6_addr
-        flags interval
-        elements = { ::/127, fc00::/7, fe80::/10, ff00::/8 }
-      }
-
       chain input {
         type filter hook input priority filter; policy accept;
         iifname "ve-t3code" ct state established,related accept
@@ -291,15 +283,17 @@ in
       # whoever asked the daemon for them — an agent could otherwise read
       # host-local services through a build log. Same rule as for the
       # container, plus the resolved stub the build sandbox's resolv.conf
-      # points at. Every rule matches the group positively: the kernel's own
-      # packets (RSTs, ICMP errors, echo replies, NDP) have no owner, so
-      # `skgid != … accept` would let them fall through to the rejects and
-      # break the host's networking.
+      # points at. No IPv6 at all, like the container: a global LAN prefix
+      # can't be listed here, and fetchers fall back to IPv4. Every rule
+      # matches the group positively: the kernel's own packets (RSTs, ICMP
+      # errors, echo replies, NDP) have no owner, so `skgid != … accept`
+      # would let them fall through to the rejects and break the host's
+      # networking.
       chain output {
         type filter hook output priority filter; policy accept;
         meta skgid ${nixbld} ip daddr 127.0.0.53 meta l4proto { tcp, udp } th dport 53 accept comment "resolved stub"
         meta skgid ${nixbld} ip daddr @blocked4 counter reject with icmpx admin-prohibited comment "nix build -> private ranges"
-        meta skgid ${nixbld} ip6 daddr @blocked6 counter reject with icmpx admin-prohibited comment "nix build -> private ranges"
+        meta skgid ${nixbld} meta nfproto ipv6 counter reject with icmpx admin-prohibited comment "nix build -> IPv6"
       }
     '';
   };
