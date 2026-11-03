@@ -198,25 +198,25 @@
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
           binding = "F14";
-          command = "/home/${username}/.local/bin/volume-down";
+          command = "/home/${username}/.local/bin/volume down";
           name = "Volume down";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
           binding = "F15";
-          command = "/home/${username}/.local/bin/volume-up";
+          command = "/home/${username}/.local/bin/volume up";
           name = "Volume up";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
           binding = "F16";
-          command = "/home/${username}/.local/bin/brightness-down";
+          command = "/home/${username}/.local/bin/brightness down";
           name = "Brightness down";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4" = {
           binding = "F17";
-          command = "/home/${username}/.local/bin/brightness-up";
+          command = "/home/${username}/.local/bin/brightness up";
           name = "Brightness up";
         };
 
