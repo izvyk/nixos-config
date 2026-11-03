@@ -177,12 +177,14 @@
           help = [ ];
           home = [ "<Super>e" ];
           www = [ "<Super>w" ];
-          # Native volume (with its OSD): the wheel, sending F14/F15, uses GNOME's
-          # fine 2% step; volume keys keep the normal volume-step.
-          volume-down-precise = [ "F14" ];
-          volume-up-precise = [ "F15" ];
+          # The wheel (F14/F15) uses the volume script below. Cleared because dconf
+          # keeps a key once set, and these would fire as well.
+          volume-down-precise = [ ];
+          volume-up-precise = [ ];
           custom-keybindings = [
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/"
+            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/"
+            "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom4/"
             "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom5/"
@@ -196,6 +198,18 @@
           binding = "<Super>Return";
           command = "footclient";
           name = "Terminal";
+        };
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1" = {
+          binding = "F14";
+          command = "/home/${username}/.local/bin/volume down";
+          name = "Volume down";
+        };
+
+        "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom2" = {
+          binding = "F15";
+          command = "/home/${username}/.local/bin/volume up";
+          name = "Volume up";
         };
 
         "org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom3" = {
