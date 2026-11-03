@@ -283,6 +283,8 @@
             "keyboard-reset@galets"
             "touchpad-gesture-customization@coooolapps.com"
             "rounded-window-corners@fxgn"
+            # From chezmoi; tells the brightness scripts which monitor the pointer is on
+            "pointer-monitor@phil"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {
