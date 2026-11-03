@@ -396,7 +396,6 @@ in
   programs.git.enable = true;
 
   programs.gnupg.agent.enableSSHSupport = false;
-  services.yubikey-agent.enable = true;
   # security.pam = {
   #   u2f = {
   #     enable = true;
