@@ -752,7 +752,7 @@ in
       "vm.dirty_bytes" = 536870912; # 512MB
     };
     kernelParams = [
-      "resume_offset=92460818"
+      "resume_offset=98657869"
       "quiet"
       # "bgrt_disable"
       "loglevel=3"
