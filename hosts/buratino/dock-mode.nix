@@ -166,6 +166,6 @@ in
 
   # Stable device name
   services.udev.extraRules = ''
-    SUBSYSTEM=="sound", KERNEL=="card*", KERNELS=="${audioPciId}", ATTR{id}="LaptopAudio"
+    SUBSYSTEM=="sound", KERNEL=="card*", KERNELS=="${audioPciId}", ATTR{id}!="LaptopAudio", ATTR{id}="LaptopAudio"
   '';
 }

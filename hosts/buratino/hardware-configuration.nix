@@ -77,6 +77,8 @@
       "nodev"
       "nosuid"
       "noexec"
+      "x-systemd.automount"
+      "x-systemd.idle-timeout=1min"
     ];
   };
 
@@ -193,7 +195,7 @@
   swapDevices = [
     {
       device = "/swap/swapfile";
-      size = 16 * 1024;
+      size = 32 * 1024;
       priority = -1;
     }
   ];

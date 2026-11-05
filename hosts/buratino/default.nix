@@ -152,6 +152,18 @@ in
     };
   };
 
+  # The timer catches up at boot and on resume, before tailnet DNS may work.
+  # Retry for half an hour, then wait for the next timer run.
+  systemd.services.btrbk-offsite = {
+    after = [ "tailscaled.service" ];
+    startLimitIntervalSec = 3600;
+    startLimitBurst = 6;
+    serviceConfig = {
+      Restart = "on-failure";
+      RestartSec = "5min";
+    };
+  };
+
   programs.firefox = {
     enable = true;
 
@@ -641,7 +653,7 @@ in
     ACTION=="add", SUBSYSTEM=="usb", ATTR{idVendor}=="214b", ATTR{idProduct}=="7260", ATTR{power/autosuspend}="-1", ATTR{power/control}="on"
 
     # Mouse: no wakeup
-    ACTION=="add", SUBSYSTEM=="usb", DRIVERS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
+    ACTION=="add", SUBSYSTEM=="usb", ENV{DEVTYPE}=="usb_device", DRIVERS=="usb", ATTRS{idVendor}=="046d", ATTRS{idProduct}=="c548", ATTR{power/wakeup}="disabled"
   '';
 
   systemd.tmpfiles.rules = [
@@ -649,6 +661,9 @@ in
     "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/data/periodic_reclaim - - - - 1"
     "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/metadata/dynamic_reclaim  - - - - 1"
     "w /sys/fs/btrfs/c044a7d1-a674-4dac-a9c8-14399829ebe4/allocation/metadata/periodic_reclaim - - - - 1"
+    # Hibernation copies memory within RAM, which fails above ~7.7 GiB. The copy
+    # ends up 1.5-3 GiB over this target, so the 5.9 GiB default is too high.
+    "w /sys/power/image_size - - - - 3758096384"
   ];
 
   systemd.settings.Manager.RebootWatchdogSec = "0";
@@ -662,8 +677,11 @@ in
       timeout = 0;
       systemd-boot.enable = true;
       systemd-boot.consoleMode = "keep";
+      systemd-boot.configurationLimit = 10;
       efi.canTouchEfiVariables = true;
     };
+    # Sensor hub driver; this laptop reports no sensors.
+    blacklistedKernelModules = [ "amd_sfh" ];
     initrd = {
       verbose = false;
       systemd.enable = true;
