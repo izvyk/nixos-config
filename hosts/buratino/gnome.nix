@@ -63,6 +63,11 @@
               only_on_change = true;
               # debounce_ms = 500;
               argv = script ''
+                # Reset the keyboard layout as the shield starts falling
+                ${pkgs.glib}/bin/gdbus call --session --dest org.gnome.Shell \
+                                            --object-path /dev/galets/gkr \
+                                            --method dev.galets.gkr.reset
+
                 ${pkgs.playerctl}/bin/playerctl -a -i GSConnect pause
 
                 # Save the caffeine state
@@ -72,11 +77,6 @@
                   ${pkgs.coreutils}/bin/touch "${caffeineStateFile}"
                 fi
                 ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle false
-
-                # Reset keyboard layout
-                ${pkgs.glib}/bin/gdbus call --session --dest org.gnome.Shell \
-                                            --object-path /dev/galets/gkr \
-                                            --method dev.galets.gkr.reset
               '';
             }
             {
@@ -90,15 +90,27 @@
               only_on_change = true;
               # debounce_ms = 500;
               argv = script ''
-                # ${pkgs.playerctl}/bin/playerctl play
-
-                ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
-
                 # Restore the caffeine state
                 if [ -f "${caffeineStateFile}" ]; then
                   ${pkgs.dconf}/bin/dconf write /org/gnome/shell/extensions/caffeine/cli-toggle true
                   ${pkgs.coreutils}/bin/rm -f "${caffeineStateFile}"
                 fi
+              '';
+            }
+            {
+              name = "suspend-on-display-off";
+              bus = "session";
+              sender = "org.gnome.Mutter.DisplayConfig";
+              interface = "org.gnome.Mutter.DisplayConfig";
+              property = "PowerSaveMode";
+              operator = ">";
+              expected_value = "0";
+              only_on_change = true;
+              argv = script ''
+                # Keep running while docked with the lid closed.
+                ${pkgs.systemd}/bin/systemctl --user --quiet is-active dock-mode.service && exit 0
+
+                ${pkgs.systemd}/bin/systemctl --no-block suspend-then-hibernate
               '';
             }
           ];
@@ -398,7 +410,9 @@
         gnomeExtensions.middle-click-to-close-in-overview
         # gnomeExtensions.simple-break-reminder
         gnomeExtensions.vicinae
-        gnomeExtensions.keyboard-reset
+        # From unstable: stable's version 9 doesn't declare support for Shell 50.
+        # It only resets by itself on ActiveChanged, so on-lock also calls it.
+        unstable.gnomeExtensions.keyboard-reset
         # gnomeExtensions.brightness-control-using-ddcutil
         gnomeExtensions.touchpad-gesture-customization
         gnomeExtensions.rounded-window-corners-reborn

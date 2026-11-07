@@ -23,11 +23,11 @@
     "godbus-monitor": {
       "flake": false,
       "locked": {
-        "lastModified": 1788987327,
-        "narHash": "sha256-3eW6xNXRqvBQI7iXdTaMjyJYx5nUsN+AEU1YTuAvEYA=",
+        "lastModified": 1794080190,
+        "narHash": "sha256-y7bs0/vjrhNWRbDg0KspCXwKcpv5kd9xif01hwwdKyM=",
         "owner": "izvyk",
         "repo": "godbus-monitor",
-        "rev": "a318d3e9e758402de167dfe40beae99ee3629b93",
+        "rev": "ea408b93d8074d1d2e39b84df0981724821f234b",
         "type": "github"
       },
       "original": {
@@ -79,11 +79,11 @@
     },
     "nixpkgs-stable": {
       "locked": {
-        "lastModified": 1792898606,
-        "narHash": "sha256-Mg3rRjsbMqhSMxop5PYMXos8SwAjejrxSgVThTvP9eg=",
+        "lastModified": 1793865203,
+        "narHash": "sha256-/cpdPHaySDIyCgZI6EWngiM6jK3YLUNzv1b7lTzy6Bk=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "1f607aa79b6356ed45d3cd3c8079c196e79efa2c",
+        "rev": "c56a87d8e41ce69bd2af57eb35dcc117a9dfca33",
         "type": "github"
       },
       "original": {
@@ -95,11 +95,11 @@
     },
     "nixpkgs-unstable": {
       "locked": {
-        "lastModified": 1792773339,
-        "narHash": "sha256-rZLrzrC6i+jnTAlvPZHogKDulY7WWDEv9hJeHieO7Zw=",
+        "lastModified": 1793876309,
+        "narHash": "sha256-Wojg9lIH/hDH91iDVH2/EPw8oDSpxjxhXONbU1yf4Zg=",
         "owner": "nixos",
         "repo": "nixpkgs",
-        "rev": "3ec636362e1816bc2f0888fa0fa2c69f1bc9e504",
+        "rev": "f9a75f41be3a74eab55d3a7679d34ad6cc0da977",
         "type": "github"
       },
       "original": {
