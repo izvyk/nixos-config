@@ -195,17 +195,8 @@ in
     };
   };
 
-  programs.ssh = {
-    extraConfig = ''
-      Match User root Host github.com
-        User git
-        IdentityFile /root/.ssh/ssh_ed25519_github
-        IdentitiesOnly yes
-    '';
-
-    knownHosts."github.com".publicKey =
-      "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
-  };
+  programs.ssh.knownHosts."github.com".publicKey =
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl";
   # programs.mosh.enable = true;
 
   age.identityPaths = [ "/etc/ssh/ssh_host_ed25519_key" ];
