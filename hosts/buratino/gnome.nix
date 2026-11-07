@@ -20,6 +20,9 @@
   services.gnome.sushi.enable = true;
   services.gnome.gnome-online-accounts.enable = true;
   # services.gnome.gnome-keyring.enable = lib.mkDefault false;
+  # No SSH agent: it can't ask for a FIDO PIN in the terminal, so verify-required
+  # keys fail through it. ssh reads the key files and prompts itself.
+  services.gnome.gcr-ssh-agent.enable = false;
 
   programs.dconf.profiles.user.databases = [
     {

@@ -75,7 +75,8 @@ in
         # unstable.nushell
         # yandex-music
         # kdePackages.filelight
-        unstable.brave-origin
+        # Temporary until brave-origin is fixed
+        # unstable.brave-origin
         baobab
         # materialgram
         # telegram-desktop
