@@ -335,7 +335,13 @@ in
       text = ''
         repo=~/Projects/nixos-config
         git -C "$repo" pull --ff-only
-        nix flake update --flake "$repo" --commit-lock-file
+        nix flake update --flake "$repo"
+        # Commit whenever flake.lock differs from HEAD, not only when this run
+        # changed it, so a commit that failed last time (key not touched) is
+        # retried.
+        if ! git -C "$repo" diff --quiet HEAD -- flake.lock; then
+          git -C "$repo" commit -m "flake.lock: update" -- flake.lock
+        fi
         git -C "$repo" push
         exec upd
       '';
