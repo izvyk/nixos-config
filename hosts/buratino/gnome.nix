@@ -14,6 +14,34 @@
   services.displayManager.gdm.enable = true;
   services.desktopManager.gnome.enable = true;
 
+  # gnome-session 50 no longer runs gnome-keyring's autostart entries, and
+  # nixpkgs builds gnome-keyring without its systemd units. So the first app
+  # asking for secrets D-Bus-starts a second daemon, which re-initialises the
+  # one PAM unlocked at login; that one then aborts (2 of 7 boots) and the
+  # survivor asks for the password again. Run it as upstream intends: one
+  # socket-activated daemon that PAM unlocks over its control socket.
+  security.wrappers.gnome-keyring-daemon.source = lib.mkForce "${
+    pkgs.gnome-keyring.overrideAttrs (old: {
+      mesonFlags = lib.remove "-Dsystemd=disabled" old.mesonFlags;
+      buildInputs = old.buildInputs ++ [ pkgs.systemd ];
+    })
+  }/bin/gnome-keyring-daemon";
+  systemd.user.sockets.gnome-keyring-daemon = {
+    wantedBy = [ "sockets.target" ];
+    socketConfig = {
+      ListenStream = "%t/keyring/control";
+      DirectoryMode = "0700";
+    };
+  };
+  systemd.user.services.gnome-keyring-daemon = {
+    requires = [ "gnome-keyring-daemon.socket" ];
+    serviceConfig = {
+      # The wrapper adds cap_ipc_lock, so secrets stay out of swap.
+      ExecStart = "/run/wrappers/bin/gnome-keyring-daemon --foreground --components=pkcs11,secrets --control-directory=%t/keyring";
+      Restart = "on-failure";
+    };
+  };
+
   services.gnome.core-apps.enable = false;
   services.gnome.core-developer-tools.enable = false;
   services.gnome.games.enable = false;

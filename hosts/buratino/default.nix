@@ -801,14 +801,6 @@ in
       "iwlwifi.power_save=1"
       "iwlmvm.power_scheme=3"
       "nmi_watchdog=0"
-      # In most boots the TSC and the HPET disagree once, by 7.74 ms, within
-      # the first 7 s. The kernel then drops the TSC for the HPET, where every
-      # clock_gettime is a 1.1 us syscall. When that step falls into the TSC
-      # calibration instead (6 of 79 boots), the TSC comes out at 2099-2115 MHz
-      # instead of 2096.06. Without the HPET, both checks use the ACPI PM
-      # timer. Nothing else needs the HPET: the APIC timer runs in deep idle
-      # (arat).
-      "nohpet"
     ];
   };
 
