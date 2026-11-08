@@ -54,6 +54,16 @@ let
     m = "delete";
   };
 
+  # Right Alt held is AltGr (sharedMain). AltGr+R and AltGr+Shift+R give the
+  # spare F22 and F23 (without AltGr) for the layout-retype extension: word or
+  # selection, and the whole line.
+  sharedAltgrLayer = {
+    r = "f22";
+  };
+  sharedAltgrShiftLayer = {
+    r = "f23";
+  };
+
   sharedCtrlShiftLayer = {
     "[" = "C-pageup";
     "]" = "C-pagedown";
@@ -139,6 +149,8 @@ in
         settings = {
           main = sharedMain;
           space_layer = sharedSpaceLayer;
+          altgr = sharedAltgrLayer;
+          "altgr+shift" = sharedAltgrShiftLayer;
           "control+shift" = sharedCtrlShiftLayer;
         };
       };
@@ -228,6 +240,8 @@ in
           # Fix ~ repeat on S-grave
           shift.grave = "S-grave";
 
+          altgr = sharedAltgrLayer;
+          "altgr+shift" = sharedAltgrShiftLayer;
           "control+shift" = sharedCtrlShiftLayer;
 
           space_layer = sharedSpaceLayer // {
