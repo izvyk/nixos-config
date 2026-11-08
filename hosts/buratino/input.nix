@@ -54,14 +54,15 @@ let
     m = "delete";
   };
 
-  # Right Alt held is AltGr (sharedMain). AltGr+R and AltGr+Shift+R give the
-  # spare F22 and F23 (without AltGr) for the layout-retype extension: word or
-  # selection, and the whole line.
+  # Right Alt held is AltGr (sharedMain). AltGr+Space and AltGr+Shift+Space give
+  # the spare F22 and F23 (without AltGr) for the layout-retype extension: word
+  # or selection, and the whole line. Space rather than a letter: right after
+  # a layout-switch tap you type letters, and rolling into one must not count.
   sharedAltgrLayer = {
-    r = "f22";
+    space = "f22";
   };
   sharedAltgrShiftLayer = {
-    r = "f23";
+    space = "f23";
   };
 
   sharedCtrlShiftLayer = {

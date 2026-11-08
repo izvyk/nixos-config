@@ -336,7 +336,7 @@
             "rounded-window-corners@fxgn"
             # From chezmoi; tells the brightness scripts which monitor the pointer is on
             "pointer-monitor@phil"
-            # From chezmoi; AltGr+R (F22 via keyd, input.nix) retypes in the other layout
+            # From chezmoi; AltGr+Space (F22 via keyd, input.nix) retypes in the other layout
             "layout-retype@phil"
           ];
         };
