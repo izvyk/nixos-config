@@ -14,7 +14,9 @@
 
 let
   flake = "github:izvyk/nixos-config";
-  nixos-rebuild = "${config.system.build.nixos-rebuild}/bin/nixos-rebuild";
+  # --no-reexec: the system is already built, and re-executing a newer
+  # nixos-rebuild would look for <nixpkgs> in NIX_PATH, which doas clears.
+  nixos-rebuild = "${config.system.build.nixos-rebuild}/bin/nixos-rebuild --no-reexec";
   systemctl = "${config.systemd.package}/bin/systemctl";
 in
 {
