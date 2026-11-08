@@ -1,4 +1,6 @@
 {
+  config,
+  lib,
   pkgs,
   username,
   inputs,
@@ -40,6 +42,13 @@ in
   # 2. Tell Home Manager to use the global system packages
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
+
+  # The activation at boot (0.8 s) held back the login screen, which only
+  # needs it done before the user logs in. Logins start the user's systemd
+  # instance, so it waits there instead.
+  systemd.services."home-manager-${username}".before = lib.mkForce [
+    "user@${toString config.users.users.${username}.uid}.service"
+  ];
 
   home-manager.users.${username} =
     { pkgs, ... }:

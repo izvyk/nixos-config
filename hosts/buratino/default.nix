@@ -44,12 +44,6 @@ in
   ];
 
 
-  systemd.services.systemd-user-sessions.unitConfig.After = [
-    "remote-fs.target"
-    "nss-user-lookup.target"
-    "home.mount"
-  ];
-
   time.timeZone = "Europe/Berlin";
 
   # Select internationalisation properties.
@@ -578,6 +572,13 @@ in
   };
   security.rtkit.enable = true; # Необходим для приоритезации аудио-потоков
 
+  # PipeWire's X11 bell module was the only X client at login, so it started
+  # Xwayland in the greeter and in the session, and crashed the greeter's
+  # PipeWire when that Xwayland went away. Xwayland still starts on demand
+  # when an X app connects.
+  services.pipewire.extraConfig.pipewire."10-no-x11-bell"."context.properties"."module.x11.bell" =
+    false;
+
   services.pipewire.extraConfig.pipewire."99-virtual-mic" = {
     "context.modules" = [
       {
@@ -692,6 +693,14 @@ in
 
   systemd.settings.Manager.RebootWatchdogSec = "0";
 
+  # After 5 mount-table changes in a second (the upstream default), systemd
+  # holds every mount job until that second ends. Boot here makes more than
+  # that, so /sysroot/nix, the local mounts, /run/wrappers and the /boot
+  # automount each waited about 1 s, 3.5 s per boot in all. 50 still caps
+  # how often a mount storm can make PID 1 reread the mount table.
+  systemd.managerEnvironment.SYSTEMD_DEFAULT_MOUNT_RATE_LIMIT_BURST = "50";
+  boot.initrd.systemd.managerEnvironment.SYSTEMD_DEFAULT_MOUNT_RATE_LIMIT_BURST = "50";
+
   boot = {
     resumeDevice = "/dev/mapper/cryptroot";
     kernelPackages = pkgs.linuxPackages_latest;
@@ -786,13 +795,20 @@ in
       "resume_offset=98657869"
       "quiet"
       # "bgrt_disable"
-      "loglevel=3"
       "systemd.show_status=auto"
       "rd.udev.log_level=3"
       "udev.log_priority=3"
       "iwlwifi.power_save=1"
       "iwlmvm.power_scheme=3"
       "nmi_watchdog=0"
+      # In most boots the TSC and the HPET disagree once, by 7.74 ms, within
+      # the first 7 s. The kernel then drops the TSC for the HPET, where every
+      # clock_gettime is a 1.1 us syscall. When that step falls into the TSC
+      # calibration instead (6 of 79 boots), the TSC comes out at 2099-2115 MHz
+      # instead of 2096.06. Without the HPET, both checks use the ACPI PM
+      # timer. Nothing else needs the HPET: the APIC timer runs in deep idle
+      # (arat).
+      "nohpet"
     ];
   };
 
