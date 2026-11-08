@@ -42,6 +42,10 @@
     };
   };
 
+  # xkbcli: the layout-retype extension (chezmoi) reads key tables from it.
+  # Must be on gnome-shell's PATH, hence system-wide.
+  environment.systemPackages = [ pkgs.libxkbcommon ];
+
   services.gnome.core-apps.enable = false;
   services.gnome.core-developer-tools.enable = false;
   services.gnome.games.enable = false;
@@ -332,6 +336,8 @@
             "rounded-window-corners@fxgn"
             # From chezmoi; tells the brightness scripts which monitor the pointer is on
             "pointer-monitor@phil"
+            # From chezmoi; Super+R retypes the selection in the other layout
+            "layout-retype@phil"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {

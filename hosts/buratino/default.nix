@@ -81,7 +81,6 @@ in
     extraGroups = [
       "wheel"
       "video"
-      "input"
       "networkmanager"
       "battery"
       "power_profile"
