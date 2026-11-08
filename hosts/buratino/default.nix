@@ -71,9 +71,6 @@ in
     };
   };
 
-  users.groups.battery = { };
-  users.groups.power_profile = { };
-
   users.users.${username} = {
     isNormalUser = true;
     uid = 1000;
@@ -81,11 +78,6 @@ in
     extraGroups = [
       "wheel"
       "video"
-      "networkmanager"
-      "battery"
-      "power_profile"
-      "i2c"
-      "adbusers"
     ];
   };
 
