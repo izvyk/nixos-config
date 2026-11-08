@@ -26,6 +26,7 @@ in
     ./network.nix
     ./virtualisation.nix
     ./hibernate-prep.nix
+    ./secure-boot.nix
     ../../modules/neovim.nix
     ../../modules/nixpkgs-overlay.nix
 
@@ -675,9 +676,13 @@ in
     zswap.enable = true;
     loader = {
       timeout = 0;
-      systemd-boot.enable = true;
+      # lanzaboote (secure-boot.nix) installs systemd-boot and takes these
+      # settings.
       systemd-boot.consoleMode = "keep";
       systemd-boot.configurationLimit = 10;
+      # No editing the kernel command line at the boot menu: `init=/bin/sh`
+      # there is a root shell as soon as the disk is unlocked.
+      systemd-boot.editor = false;
       efi.canTouchEfiVariables = true;
     };
     # Sensor hub driver; this laptop reports no sensors.

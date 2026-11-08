@@ -22,6 +22,12 @@
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
 
+    # Secure Boot for buratino. Not in nixpkgs; pinned to a release tag.
+    lanzaboote = {
+      url = "github:nix-community/lanzaboote/v1.2.0";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
+
     godbus-monitor = {
       url = "github:izvyk/godbus-monitor";
       flake = false;

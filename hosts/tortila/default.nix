@@ -116,6 +116,9 @@ in
       systemd-boot.enable = true;
       systemd-boot.consoleMode = "keep";
       systemd-boot.configurationLimit = 10;
+      # No editing the kernel command line at the boot menu: `init=/bin/sh`
+      # there is a root shell as soon as the disk is unlocked.
+      systemd-boot.editor = false;
       efi.canTouchEfiVariables = true;
     };
     initrd = {
