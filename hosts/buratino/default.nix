@@ -685,6 +685,9 @@ in
       systemd-boot.editor = false;
       efi.canTouchEfiVariables = true;
     };
+    # Boot splash: the default bgrt theme keeps the firmware's Lenovo logo and
+    # asks for the LUKS password graphically. Esc shows the boot log.
+    plymouth.enable = true;
     # Sensor hub driver; this laptop reports no sensors.
     blacklistedKernelModules = [ "amd_sfh" ];
     initrd = {
