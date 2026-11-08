@@ -27,6 +27,7 @@ in
     ./datasync.nix
     ./network.nix
     ../../modules/neovim.nix
+    ../../modules/upd.nix
     ./services.nix
     ./t3code.nix
     ../../modules/nixpkgs-overlay.nix

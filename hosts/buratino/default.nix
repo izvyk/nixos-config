@@ -28,6 +28,7 @@ in
     ./hibernate-prep.nix
     ./secure-boot.nix
     ../../modules/neovim.nix
+    ../../modules/upd.nix
     ../../modules/nixpkgs-overlay.nix
 
     # fontconfig.aliases only exists in unstable
@@ -323,6 +324,22 @@ in
     enableFishIntegration = false;
   };
   environment.systemPackages = with pkgs; [
+    # `updf`: update flake.lock in the checkout, commit and push it, then `upd`
+    # (modules/upd.nix) to build and deploy it.
+    (writeShellApplication {
+      name = "updf";
+      runtimeInputs = [
+        git
+        config.nix.package
+      ];
+      text = ''
+        repo=~/Projects/nixos-config
+        git -C "$repo" pull --ff-only
+        nix flake update --flake "$repo" --commit-lock-file
+        git -C "$repo" push
+        exec upd
+      '';
+    })
     linux-firmware
     bat
     btop
