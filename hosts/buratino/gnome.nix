@@ -338,6 +338,8 @@
             "pointer-monitor@phil"
             # From chezmoi; AltGr+Space (F22 via keyd, input.nix) retypes in the other layout
             "layout-retype@phil"
+            # From chezmoi; Yeelight light bar's rear light follows the Dell's top half
+            "wall-light@phil"
           ];
         };
         "org/gnome/shell/extensions/just-perfection" = {
