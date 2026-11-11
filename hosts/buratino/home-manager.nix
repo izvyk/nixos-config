@@ -85,7 +85,7 @@ in
         # yandex-music
         # kdePackages.filelight
         # Temporary until brave-origin is fixed
-        # unstable.brave-origin
+        brave-origin
         baobab
         # materialgram
         # telegram-desktop
