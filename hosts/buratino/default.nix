@@ -332,8 +332,11 @@ in
         NIX_PATH=nixpkgs=channel:nixpkgs-unstable COMMA_CACHING=0 exec , "$@"
       '';
     })
-    # `updf`: update flake.lock in the checkout, commit and push it, then `upd`
-    # (modules/upd.nix) to build and deploy it.
+    # `updf`: update flake.lock of GitHub master, commit and push it, then
+    # `upd` (modules/upd.nix) to build and deploy it.
+    # Works in a throwaway worktree of origin/master, never in the checkout:
+    # unfinished edits there (say, a new flake input) must not leak into the
+    # lock file or the commit.
     (writeShellApplication {
       name = "updf";
       runtimeInputs = [
@@ -342,16 +345,18 @@ in
       ];
       text = ''
         repo=~/Projects/nixos-config
-        git -C "$repo" pull --ff-only
-        nix flake update --flake "$repo"
-        # Commit whenever flake.lock differs from HEAD, not only when this run
-        # changed it, so a commit that failed last time (key not touched) is
-        # retried.
-        if ! git -C "$repo" diff --quiet HEAD -- flake.lock; then
-          git -C "$repo" commit -m "flake.lock: update" -- flake.lock
+        tmp=$(mktemp -d)
+        trap 'git -C "$repo" worktree remove --force "$tmp/master"; rm -rf "$tmp"' EXIT
+        git -C "$repo" fetch origin
+        git -C "$repo" worktree add --detach "$tmp/master" origin/master
+        nix flake update --flake "$tmp/master"
+        if ! git -C "$tmp/master" diff --quiet -- flake.lock; then
+          git -C "$tmp/master" commit -m "flake.lock: update" -- flake.lock
+          git -C "$tmp/master" push origin HEAD:master
         fi
-        git -C "$repo" push
-        exec upd
+        git -C "$repo" pull --ff-only \
+          || echo "Checkout not fast-forwarded (local changes?); pull it yourself."
+        upd
       '';
     })
     linux-firmware
