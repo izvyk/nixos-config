@@ -14,11 +14,12 @@
 #   - own network namespace: the loopback-only services on this host
 #     (AnkiConnect, n8n, ollama, docker-published ports, …) don't exist in
 #     there. Egress is NATed and may reach the public internet only — no LAN,
-#     tailnet, docker bridges or the host itself (see t3code-isolation below).
+#     tailnet, docker bridges or the host itself (sandbox-net.nix).
 #   - capped memory, swap, CPU and tasks; first in line for the OOM killer.
 # Agents get nix (nix shell, nix-shell -p, nix develop) through the host's
 # daemon. Fixed-output builds run in the host's network namespace, so they get
-# the same public-internet-only rule, for every user on this host.
+# the same public-internet-only rule, for every user on this host
+# (sandbox-net.nix).
 # Everything comes from nixpkgs, no nix-ld: t3code, claude-code, opencode, and
 # the headless Chrome t3 would otherwise download at runtime.
 #
@@ -32,7 +33,6 @@
 #     t3 auth pairing create --base-url https://t3code.<tailnet>
 let
   localAddress = "10.233.0.2";
-  nixbld = toString config.ids.gids.nixbld;
 
   # Without codex. The wrapper puts git and gh on t3's PATH; claude and
   # opencode come from systemPackages (on the unit's path), so `machinectl
@@ -240,61 +240,5 @@ in
     OOMScoreAdjust = 500;
   };
 
-  # Masquerade container traffic out of whichever uplink is active (eno1 or
-  # wlan0, hence no externalInterface).
-  networking.nat = {
-    enable = true;
-    internalInterfaces = [ "ve-t3code" ];
-  };
-
-  # Separate table with accept policies: it only ever narrows what the
-  # container and nix builds may do, and leaves the exit-node forwarding alone.
-  networking.nftables.tables.t3code-isolation = {
-    family = "inet";
-    content = ''
-      # RFC 1918 (LAN, docker bridges), CGNAT (tailnet, MagicDNS), loopback,
-      # link-local, "this network", IETF protocol assignments, benchmarking,
-      # multicast and reserved.
-      set blocked4 {
-        type ipv4_addr
-        flags interval
-        elements = {
-          0.0.0.0/8, 10.0.0.0/8, 100.64.0.0/10, 127.0.0.0/8, 169.254.0.0/16,
-          172.16.0.0/12, 192.0.0.0/24, 192.168.0.0/16, 198.18.0.0/15, 224.0.0.0/3
-        }
-      }
-
-      chain input {
-        type filter hook input priority filter; policy accept;
-        iifname "ve-t3code" ct state established,related accept
-        iifname "ve-t3code" counter reject with icmpx admin-prohibited comment "container -> host"
-      }
-
-      # The container only has IPv4, so its rules don't need an IPv6 twin.
-      chain forward {
-        type filter hook forward priority filter; policy accept;
-        oifname "ve-t3code" ct state established,related accept
-        oifname "ve-t3code" counter drop comment "-> container; only the host itself may connect"
-        iifname "ve-t3code" ip daddr @blocked4 counter reject with icmpx admin-prohibited comment "container -> private ranges"
-      }
-
-      # Fixed-output builds (fetchers) run as nix's build users (group
-      # nixbld; not with auto-allocate-uids) in the host's network namespace,
-      # whoever asked the daemon for them — an agent could otherwise read
-      # host-local services through a build log. Same rule as for the
-      # container, plus the resolved stub the build sandbox's resolv.conf
-      # points at. No IPv6 at all, like the container: a global LAN prefix
-      # can't be listed here, and fetchers fall back to IPv4. Every rule
-      # matches the group positively: the kernel's own packets (RSTs, ICMP
-      # errors, echo replies, NDP) have no owner, so `skgid != … accept`
-      # would let them fall through to the rejects and break the host's
-      # networking.
-      chain output {
-        type filter hook output priority filter; policy accept;
-        meta skgid ${nixbld} ip daddr 127.0.0.53 meta l4proto { tcp, udp } th dport 53 accept comment "resolved stub"
-        meta skgid ${nixbld} ip daddr @blocked4 counter reject with icmpx admin-prohibited comment "nix build -> private ranges"
-        meta skgid ${nixbld} meta nfproto ipv6 counter reject with icmpx admin-prohibited comment "nix build -> IPv6"
-      }
-    '';
-  };
+  sandbox.interfaces = [ "ve-t3code" ];
 }

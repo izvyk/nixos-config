@@ -29,7 +29,9 @@ in
     ../../modules/neovim.nix
     ../../modules/upd.nix
     ./services.nix
+    ./sandbox-net.nix
     ./t3code.nix
+    ./minilab.nix
     ../../modules/nixpkgs-overlay.nix
 
     inputs.agenix.nixosModules.default

@@ -28,6 +28,12 @@
       inputs.nixpkgs.follows = "nixpkgs-stable";
     };
 
+    # Declarative KVM guests (tortila: mini-lab).
+    microvm = {
+      url = "github:microvm-nix/microvm.nix";
+      inputs.nixpkgs.follows = "nixpkgs-stable";
+    };
+
     godbus-monitor = {
       url = "github:izvyk/godbus-monitor";
       flake = false;
