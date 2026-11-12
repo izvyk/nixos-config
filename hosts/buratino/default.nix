@@ -262,6 +262,11 @@ in
       max-jobs = 1;
 
       auto-optimise-store = true;
+      # Fallback to the weekly gc below: when a build sees under 10 GiB free,
+      # collect garbage until 30 GiB are free. Only unreferenced paths go;
+      # generations stay.
+      min-free = 10 * 1024 * 1024 * 1024;
+      max-free = 30 * 1024 * 1024 * 1024;
       experimental-features = [
         "nix-command"
         "flakes"
