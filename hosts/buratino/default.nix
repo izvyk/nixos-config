@@ -317,6 +317,21 @@ in
   # package via the nix-index database (imported above).
   programs.nix-index-database.comma.enable = true;
   environment.systemPackages = with pkgs; [
+    # `,, <cmd>`: the same from nixpkgs-unstable (like `nsu` next to `ns`).
+    # comma ignores -F whenever NIX_PATH has nixpkgs= (ours does), so point
+    # <nixpkgs> at unstable instead, like `nsu` does with -I.
+    # comma's cache is keyed by command name only, so `,` and `,,` would
+    # hand each other's binaries back; `,,` doesn't use it at all.
+    # Store paths can't contain commas, hence the separate package name.
+    (writeTextFile {
+      name = "comma-unstable";
+      destination = "/bin/,,";
+      executable = true;
+      text = ''
+        #!${runtimeShell}
+        NIX_PATH=nixpkgs=channel:nixpkgs-unstable COMMA_CACHING=0 exec , "$@"
+      '';
+    })
     # `updf`: update flake.lock in the checkout, commit and push it, then `upd`
     # (modules/upd.nix) to build and deploy it.
     (writeShellApplication {
