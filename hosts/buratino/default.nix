@@ -308,6 +308,9 @@ in
     enable = true;
     enableFishIntegration = false;
   };
+  # `, <cmd>`: run a program from nixpkgs without installing it; finds the
+  # package via the nix-index database (imported above).
+  programs.nix-index-database.comma.enable = true;
   environment.systemPackages = with pkgs; [
     # `updf`: update flake.lock in the checkout, commit and push it, then `upd`
     # (modules/upd.nix) to build and deploy it.
