@@ -292,7 +292,7 @@ in
         (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
         # SSH into the mini-lab VM (minilab.nix): its own keys, no account on
         # this host needed. Refused while the VM is off.
-        (tcp "svc:minilab" 22 "tcp://10.233.1.2:22")
+        (tcp "svc:minilab" 22 "tcp://minilab:22")
       ];
     in
     {

@@ -136,5 +136,9 @@ in
     linkConfig.RequiredForOnline = "no";
   };
 
+  # The one place the VM's address is spelled out for the rest of this host:
+  # svc:minilab (network.nix) and `ssh minilab` here use the name.
+  networking.hosts.${vmAddress} = [ "minilab" ];
+
   sandbox.interfaces = [ tap ];
 }
