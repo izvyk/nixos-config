@@ -45,7 +45,7 @@ in
         tmp=$(mktemp -d)
         trap 'rm -rf "$tmp"' EXIT
         # --refresh: fetch master now instead of reusing a cached copy.
-        nh os build ${flake} -o "$tmp/result" -- --refresh
+        nh os build ${lib.escapeShellArg flake} -o "$tmp/result" -- --refresh
         new=$(readlink -f "$tmp/result")
         current=$(readlink -f /run/current-system)
 
