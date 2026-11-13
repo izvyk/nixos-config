@@ -7,9 +7,8 @@
 let
   tailnet = "shorthair-inconnu.ts.net";
   cloudflare-domain = "netak.li";
-  # Tailscale Services hosted on this machine (bare names; units below add
-  # the `svc:` prefix where needed). Single source of truth for both the
-  # serve and advertise units.
+  # Tailscale Services hosted on this machine (bare names; the serve unit
+  # below adds the `svc:` prefix): the ones it advertises.
   serveNames = [
     "home"
     "immich"
@@ -282,40 +281,35 @@ in
       # restarts the unit whenever `script` changes (i.e. on every edit here).
       # Restarts together with tailscaled so a daemon restart (or late login)
       # re-applies the config instead of silently staying down.
-      script = endpoints;
+      #
+      # `tailscale serve --service=…` configures AND advertises in one go, but
+      # a later `serve reset` (or any state loss) silently drops
+      # advertisements — services show "0 hosts" with no trace in the Nix
+      # config — so advertise everything again at the end. This used to be a
+      # second unit, which lost the race against a tailscaled restart during
+      # a switch ("Dependency failed") and then never ran again.
+      # NOTE: advertising is not approval — a fresh host or service still
+      # needs one-time Approve in the admin console (or autoApprovers in the
+      # tailnet policy).
+      script =
+        endpoints
+        + lib.concatMapStrings (name: ''
+          ${tailscale} serve advertise svc:${name}
+        '') serveNames;
+      # tailscaled may still be logging in when this first runs: retry with
+      # backoff (5 s up to 2 min), and give up after 10 starts in 15 min so a
+      # persistent error ends up in `systemctl --failed` instead of looping.
+      startLimitBurst = 10;
+      startLimitIntervalSec = 15 * 60;
       serviceConfig = {
         Type = "oneshot";
         RemainAfterExit = true;
+        Restart = "on-failure";
+        RestartSec = 5;
+        RestartSteps = 5;
+        RestartMaxDelaySec = "2min";
       };
     };
-
-  # `tailscale serve --service=…` configures AND advertises in one go, but a
-  # later `serve reset` (or any state loss) silently drops advertisements —
-  # services show "0 hosts" with no trace in the Nix config. This unit
-  # re-advertises everything after the L7 unit. Idempotent no-op otherwise.
-  # NOTE: advertising is not approval — a fresh host still needs one-time
-  # Approve in the admin console (or autoApprovers in the tailnet policy).
-  systemd.services.tailscale-serve-advertise = {
-    description = "Advertise Tailscale Services from this host";
-    after = [
-      "tailscaled.service"
-      "tailscale-serve-l7.service"
-    ];
-    wants = [ "tailscale-serve-l7.service" ];
-    bindsTo = [
-      "tailscaled.service"
-      "tailscale-serve-l7.service"
-    ];
-    partOf = [ "tailscale-serve-l7.service" ];
-    wantedBy = [ "multi-user.target" ];
-    script = lib.concatMapStrings (name: ''
-      ${lib.getExe config.services.tailscale.package} serve advertise svc:${name}
-    '') serveNames;
-    serviceConfig = {
-      Type = "oneshot";
-      RemainAfterExit = true;
-    };
-  };
 
   age.secrets.cloudflared-tortila-tunnel = {
     file = ../../secrets/cloudflared-tortila-tunnel.age;
