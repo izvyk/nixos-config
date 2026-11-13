@@ -648,6 +648,11 @@ in
     };
   };
   hardware.i2c.enable = true;
+
+  # The Dell sits on "No signal" while the laptop sleeps: put it into standby
+  # over DDC. It doesn't wake by itself when the signal returns, hence resume.
+  powerManagement.powerDownCommands = "${pkgs.ddcutil}/bin/ddcutil --sn F2NJ464 setvcp d6 04 || true";
+  powerManagement.resumeCommands = "${pkgs.ddcutil}/bin/ddcutil --sn F2NJ464 setvcp d6 01 || true";
   hardware.brillo.enable = true;
 
   security.sudo.enable = false;
