@@ -2,24 +2,37 @@
 # changes, then ask: [s]witch now, [b]oot it next time, [r]eboot into it, or
 # nothing.
 #
-# Only pushed commits can be deployed. The build runs as you, through nh (nom
+# Only pushed commits signed with the git signing key can be deployed: Nix
+# checks the signature on master before building, so a commit that someone
+# else with write access to the GitHub repo pushes is refused.
+#
+# The build runs as you, through nh (nom
 # build log, package diff against the running system); doas is only for
 # activating. nixos-rebuild activates in its own systemd unit, so a switch
 # that takes down the GNOME session (and this terminal) still finishes.
 {
   config,
+  lib,
   pkgs,
   ...
 }:
 
 let
-  flake = "github:izvyk/nixos-config";
+  # id_ed25519_sk_git_signing.pub (FIDO key, gpg.format ssh).
+  signingKey = "AAAAGnNrLXNzaC1lZDI1NTE5QG9wZW5zc2guY29tAAAAIJgHi3/E7FNJhIViINXRt4zC/T+6TGDUvDu9BDnw7Is1AAAABHNzaDo=";
+  # shallow: only the tip commit, no history.
+  flake =
+    "git+https://github.com/izvyk/nixos-config?ref=master&shallow=1"
+    + "&verifyCommit=1&keytype=ssh-ed25519-sk&publicKey=${lib.escapeURL signingKey}";
   # --no-reexec: the system is already built, and re-executing a newer
   # nixos-rebuild would look for <nixpkgs> in NIX_PATH, which doas clears.
   nixos-rebuild = "${config.system.build.nixos-rebuild}/bin/nixos-rebuild --no-reexec";
   systemctl = "${config.systemd.package}/bin/systemctl";
 in
 {
+  # verifyCommit in the flake URL above.
+  nix.settings.experimental-features = [ "verified-fetches" ];
+
   environment.systemPackages = [
     (pkgs.writeShellApplication {
       name = "upd";

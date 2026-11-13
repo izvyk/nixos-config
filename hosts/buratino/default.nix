@@ -332,25 +332,31 @@ in
         NIX_PATH=nixpkgs=channel:nixpkgs-unstable COMMA_CACHING=0 exec , "$@"
       '';
     })
-    # `updf`: update flake.lock of GitHub master, commit and push it, then
-    # `upd` (modules/upd.nix) to build and deploy it.
+    # `updf`: update flake.lock of GitHub master, build it, commit and push
+    # it, then `upd` (modules/upd.nix) to deploy it from GitHub.
     # Works in a throwaway worktree of origin/master, never in the checkout:
     # unfinished edits there (say, a new flake input) must not leak into the
     # lock file or the commit.
+    # A lock that doesn't build here (or doesn't evaluate for tortila) is
+    # never pushed. upd then finds the same build in the store: the source is
+    # identical, so nothing builds twice.
     (writeShellApplication {
       name = "updf";
       runtimeInputs = [
         git
+        nh
         config.nix.package
       ];
       text = ''
         repo=~/Projects/nixos-config
         tmp=$(mktemp -d)
-        trap 'git -C "$repo" worktree remove --force "$tmp/master"; rm -rf "$tmp"' EXIT
-        git -C "$repo" fetch origin
+        trap 'git -C "$repo" worktree remove --force "$tmp/master" || true; rm -rf "$tmp"' EXIT
+        git -C "$repo" fetch origin master
         git -C "$repo" worktree add --detach "$tmp/master" origin/master
         nix flake update --flake "$tmp/master"
         if ! git -C "$tmp/master" diff --quiet -- flake.lock; then
+          nh os build "$tmp/master" -o "$tmp/result"
+          nix eval --raw "$tmp/master#nixosConfigurations.tortila.config.system.build.toplevel.drvPath" >/dev/null
           git -C "$tmp/master" commit -m "flake.lock: update" -- flake.lock
           git -C "$tmp/master" push origin HEAD:master
         fi
