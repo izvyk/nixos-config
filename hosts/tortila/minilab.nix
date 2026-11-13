@@ -38,7 +38,7 @@ in
   microvm.vms.minilab = {
     autostart = false;
     config =
-      { pkgs, ... }:
+      { pkgs, lib, ... }:
       {
         system.stateVersion = "26.05";
 
@@ -121,7 +121,37 @@ in
           jq
           cosign
           tmux
+
+          # Developing metal-stack components here, e.g. with Zed's remote
+          # development (below). There's no nix inside the VM, so the
+          # toolchain comes with it. metal-stack's go.mod files want Go 1.27,
+          # which only unstable has.
+          unstable.go
+          unstable.gopls
+          unstable.delve
+          gcc # cgo
         ];
+        # metal-core reaches libpcap through cgo (gopacket); go build and
+        # gopls pick these up. The rpath lets the binaries run here too.
+        # Headers through gcc's own variable: CGO_CFLAGS would replace Go's
+        # default -O2 -g, and the flags delve sets for debugging.
+        environment.variables = {
+          C_INCLUDE_PATH = "${lib.getDev pkgs.libpcap}/include";
+          CGO_LDFLAGS = "-L${lib.getLib pkgs.libpcap}/lib -Wl,-rpath,${lib.getLib pkgs.libpcap}/lib";
+        };
+
+        # Zed's remote server, where the client looks for it, from the same
+        # nixpkgs as the Zed on buratino: the flake.lock is shared, so the
+        # versions match, and Zed has nothing to download.
+        systemd.tmpfiles.rules =
+          let
+            zed = pkgs.unstable.zed-editor;
+            name = zed.remoteServerExecutableName;
+          in
+          [
+            "d /home/dev/.zed_server 0755 dev users -"
+            "L+ /home/dev/.zed_server/${name} - - - - ${zed.remote_server}/bin/${name}"
+          ];
       };
   };
 
