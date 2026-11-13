@@ -371,6 +371,8 @@ in
     zoxide
     file
     nixfmt
+    # Code to the mini-lab VM: one-way sync of a checkout (see LAB.md there).
+    mutagen
 
     cryptsetup
     exfatprogs
