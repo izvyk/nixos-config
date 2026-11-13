@@ -24,6 +24,7 @@ let
     "hermes-api"
     "artemon"
     "t3code"
+    "minilab"
   ];
 in
 {
@@ -289,6 +290,9 @@ in
         (https "svc:t3code" "http://${config.containers.t3code.localAddress}:3773")
         (https "svc:artemon" "http://artemon.lan:80")
         (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
+        # SSH into the mini-lab VM (minilab.nix): its own keys, no account on
+        # this host needed. Refused while the VM is off.
+        (tcp "svc:minilab" 22 "tcp://10.233.1.2:22")
       ];
     in
     {

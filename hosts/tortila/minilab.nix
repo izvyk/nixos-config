@@ -9,15 +9,16 @@
 #   - own kernel; root inside is not root here.
 #   - only the store paths of its own system, on a read-only disk image (no
 #     virtiofsd on the host, no nix daemon socket).
-#   - egress is NATed to the public internet only (sandbox-net.nix). The host
-#     may connect in, nothing else can.
+#   - egress is NATed to the public internet only (sandbox-net.nix). Only the
+#     host may connect in, and it proxies SSH from the tailnet (svc:minilab
+#     in network.nix).
 #   - QEMU runs as the unprivileged `microvm` user.
 # Inside, the switches and test machines are nested VMs: QEMU passes the host
 # CPU through, vmx included, and kvm_intel nests by default.
 #
 # Not started at boot. Run it, as dev on tortila:
 #   doas systemctl start microvm@minilab
-#   ssh dev@10.233.1.2              # from buratino: ssh -J tortila dev@10.233.1.2
+#   ssh dev@minilab.<tailnet>       # from buratino/malvina, via svc:minilab
 #   git clone https://github.com/metal-stack/mini-lab && cd mini-lab
 #   make MONITORING_ENABLED=false   # first run downloads ~10 GB of images
 #
