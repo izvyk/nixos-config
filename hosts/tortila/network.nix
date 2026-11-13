@@ -144,49 +144,25 @@ in
         "hmac-sha2-512"
       ];
     };
+    # backupreader = phone (Solid Explorer) browsing the btrbk snapshots.
+    # Chroot straight into the /backup automount: chroot() is a path lookup,
+    # so it triggers the automount, and the open session keeps /backup busy
+    # (no idle unmount mid-browse). The old bind mounts of
+    # /backup/{laptop,masterdata} were stopped together with backup.mount on
+    # idle unmount and nothing brought them back -> empty folders.
+    # Dropped bind options, per option:
+    #   ro: writes are already blocked by `-R`, by the btrbk-owned 0755
+    #       target dirs, and by the snapshots being read-only subvolumes.
+    #   noexec/nosuid/nodev: irrelevant, this user only gets internal-sftp.
+    # /backup holds only laptop/ and masterdata/, so the view is unchanged.
     extraConfig = ''
       Match User backupreader
-        ChrootDirectory /srv/sftp/backupreader
+        ChrootDirectory /backup
         ForceCommand internal-sftp -R
-        AllowTcpForwarding no
+        DisableForwarding yes
         PermitTunnel no
-        X11Forwarding no
         PermitTTY no
-        GatewayPorts no
     '';
-  };
-
-  systemd.tmpfiles.rules = [
-    # Chroot dir must stay root-owned 0755 (sshd requirement); the
-    # subdirs are mountpoints — created here so the bind mounts below
-    # don't fail on a fresh boot.
-    "d /srv/sftp/backupreader 0755 root root -"
-    "d /srv/sftp/backupreader/laptop 0755 root root -"
-    "d /srv/sftp/backupreader/masterdata 0755 root root -"
-  ];
-
-  fileSystems."/srv/sftp/backupreader/laptop" = {
-    device = "/backup/laptop";
-    fsType = "none";
-    options = [
-      "bind"
-      "ro"
-      "noexec"
-      "nosuid"
-      "nodev"
-    ];
-  };
-
-  fileSystems."/srv/sftp/backupreader/masterdata" = {
-    device = "/backup/masterdata";
-    fsType = "none";
-    options = [
-      "bind"
-      "ro"
-      "noexec"
-      "nosuid"
-      "nodev"
-    ];
   };
 
   systemd.services.sshd = {
