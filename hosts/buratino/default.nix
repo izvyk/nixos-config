@@ -425,33 +425,38 @@ in
   fonts = {
     fontDir.enable = true;
     enableDefaultPackages = false;
-    packages = with pkgs; [
-      # Sans-Serif
-      # geist-font # достаточно "незаметный"
-      (google-fonts.override {
-        fonts = [ "Roboto Condensed" ];
-      })
-      # (iosevka-bin.override { variant = "Aile"; }) # Смотрится по-технически, сухо - это минус
-      # ibm-plex # Sans Condensed красивый, но кириллица отображается криво - ударения и буква Ж, проблемы с шириной букв
+    packages =
+      let
+        iosevkaNoEmoji = pkgs.callPackage ./iosevka-no-emoji.nix { };
+      in
+      with pkgs;
+      [
+        # Sans-Serif
+        # geist-font # достаточно "незаметный"
+        (google-fonts.override {
+          fonts = [ "Roboto Condensed" ];
+        })
+        # (iosevka-bin.override { variant = "Aile"; }) # Смотрится по-технически, сухо - это минус
+        # ibm-plex # Sans Condensed красивый, но кириллица отображается криво - ударения и буква Ж, проблемы с шириной букв
 
-      # Serif
-      literata # Красивый, легко читается, в меру нарядный, "мягкий", со сложными утолщениями и изгибами в качестве засечек
-      # merriweather # Аккуратный, легко читается, "острый", c простыми, буквальными засечками
-      (iosevka-bin.override { variant = "Etoile"; }) # Смотрится по-технически, как советская инструкция, напечатанная на машинке
+        # Serif
+        literata # Красивый, легко читается, в меру нарядный, "мягкий", со сложными утолщениями и изгибами в качестве засечек
+        # merriweather # Аккуратный, легко читается, "острый", c простыми, буквальными засечками
+        (iosevkaNoEmoji (iosevka-bin.override { variant = "Etoile"; })) # Смотрится по-технически, как советская инструкция, напечатанная на машинке
 
-      # Monospace
-      (iosevka-bin.override { variant = "Curly"; }) # Идеален дял терминала, прекрасен во всём. Пробую Curly-вариант
-      # nerd-fonts.iosevka
+        # Monospace
+        (iosevkaNoEmoji (iosevka-bin.override { variant = "Curly"; })) # Идеален дял терминала, прекрасен во всём. Пробую Curly-вариант
+        # nerd-fonts.iosevka
 
-      # Emoji
-      (pkgs.callPackage ./apple-emoji.nix { }) # Неподражаемые Apple Emoji!
+        # Emoji
+        (pkgs.callPackage ./apple-emoji.nix { }) # Неподражаемые Apple Emoji!
 
-      # Fallback
-      nerd-fonts.symbols-only
-      noto-fonts
-      noto-fonts-cjk-sans
-      noto-fonts-cjk-serif
-    ];
+        # Fallback
+        nerd-fonts.symbols-only
+        noto-fonts
+        noto-fonts-cjk-sans
+        noto-fonts-cjk-serif
+      ];
 
     fontconfig = {
       defaultFonts = {

@@ -28,8 +28,12 @@ stdenvNoCC.mkDerivation rec {
     # 2. Replace the internal name with your custom name
     sed -i 's/Apple Color Emoji/Apple Emoji/g' name.ttx
 
-    # 3. Replace the PostScript name
-    sed -i 's/AppleColorEmoji/AppleEmoji/g' name.ttx
+    # 3. Replace the PostScript name. Zed draws a font in color only if its
+    #    PostScript name is exactly "NotoColorEmoji" (check_is_known_emoji_font
+    #    in gpui_wgpu); anything else is drawn as outlines, and this font has
+    #    none, so emoji came out blank. Apps match on the family name, so this
+    #    doesn't make the font stand in for Noto anywhere else.
+    sed -i 's/AppleColorEmoji/NotoColorEmoji/g' name.ttx
 
     # 4. Merge the patched XML back into a new TTF file
     ttx -m $src name.ttx -o AppleEmoji.ttf
