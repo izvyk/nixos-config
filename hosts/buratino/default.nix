@@ -150,6 +150,9 @@ in
     };
   };
 
+  # about:config prefs live in chezmoi (mozilla/firefox/default/user.js), shared
+  # with malvina. Only what user.js can't do is here. Don't use `preferences`:
+  # policies drop prefs outside Firefox's allowlist (mousewheel.* was ignored).
   programs.firefox = {
     enable = true;
 
@@ -159,94 +162,19 @@ in
       "ru"
     ];
 
-    # doesn't work?
-    preferences = {
-      "mousewheel.with_alt.action" = 5;
-      "ui.key.menuAccessKeyFocuses" = false;
-    };
-
     policies = {
-      # Updates & Background Services
-      # AppAutoUpdate                 = false;
-      # BackgroundAppUpdate           = false;
-
-      # Feature Disabling
-      # DisableBuiltinPDFViewer       = true;
-      # DisableFirefoxStudies         = true;
-      # DisableFirefoxAccounts        = true;
-      # DisableFirefoxScreenshots     = true;
-      # DisableForgetButton           = true;
-      DisableMasterPasswordCreation = true;
-      DisableProfileImport = true;
-      # DisableProfileRefresh         = true;
-      DisableSetDesktopBackground = true;
-      DisablePocket = true;
       DisableTelemetry = true;
-      # DisableFormHistory            = true;
-      # DisablePasswordReveal         = true;
-
-      # Access Restrictions
-      # BlockAboutConfig              = false;
-      # BlockAboutProfiles            = true;
-      # BlockAboutSupport             = true;
-
-      # UI and Behavior
+      DisableFirefoxStudies = true;
+      DisablePocket = true;
+      DisableProfileImport = true;
+      DisableSetDesktopBackground = true;
       DisplayMenuBar = "never";
       DontCheckDefaultBrowser = true;
       HardwareAcceleration = true;
-      OfferToSaveLogins = false;
-      # DefaultDownloadDirectory      = "${home}/Downloads";
-
+      # Passwords live in KeePassXC. Sync's own login keeps working: it uses the
+      # login storage directly, not the password manager.
+      PasswordManagerEnabled = false;
     };
-
-    #    profiles.default.search = {
-    #    # force           = true;
-    #    # default         = "DuckDuckGo";
-    #    # privateDefault  = "DuckDuckGo";
-    #
-    #    engines = {
-    #      "Nix Packages" = {
-    # urls = [
-    #   {
-    #     template = "https://search.nixos.org/packages";
-    #     params = [
-    #       { name = "channel"; value = "unstable"; }
-    #       { name = "query";   value = "{searchTerms}"; }
-    #     ];
-    #   }
-    # ];
-    # icon           = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-    # definedAliases = [ "@np" ];
-    #      };
-    #
-    #      "Nix Options" = {
-    # urls = [
-    #   {
-    #     template = "https://search.nixos.org/options";
-    #     params = [
-    #       { name = "channel"; value = "unstable"; }
-    #       { name = "query";   value = "{searchTerms}"; }
-    #     ];
-    #   }
-    # ];
-    # icon           = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-    # definedAliases = [ "@no" ];
-    #      };
-    #
-    #      "NixOS Wiki" = {
-    # urls = [
-    #   {
-    #     template = "https://wiki.nixos.org/w/index.php";
-    #     params = [
-    #       { name = "search"; value = "{searchTerms}"; }
-    #     ];
-    #   }
-    # ];
-    # icon           = "${pkgs.nixos-icons}/share/icons/hicolor/scalable/apps/nix-snowflake.svg";
-    # definedAliases = [ "@nw" ];
-    #      };
-    #    };
-    #  };
   };
 
   nixpkgs.config = {

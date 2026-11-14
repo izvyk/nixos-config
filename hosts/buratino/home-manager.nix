@@ -156,24 +156,6 @@ in
         # snapshotScript
       ];
 
-      # programs.librewolf = {
-      #   enable = true;
-      #   # languagePacks = {
-      #   policies = {
-      #     # BlockAboutConfig = true;
-      #     DefaultDownloadDirectory = "\${home}/Downloads";
-      #     ExtensionSettings = {
-      #       "uBlock0@raymondhill.net" = {
-      #         default_area = "menupanel";
-      #         install_url = "https://addons.mozilla.org/firefox/downloads/latest/ublock-origin/latest.xpi";
-      #         installation_mode = "force_installed";
-      #         private_browsing = true;
-      #       };
-      #     };
-      #   };
-      #
-      # };
-
       programs.foot = {
         enable = true;
         server.enable = true;
