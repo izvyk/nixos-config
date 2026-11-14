@@ -40,19 +40,26 @@
     };
   };
 
-  outputs = { self, nixpkgs-stable, nixpkgs-unstable, ... }@inputs: {
-    nixosConfigurations = {
-      buratino = nixpkgs-stable.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
-        modules = [ ./hosts/buratino ];
-      };
+  outputs =
+    {
+      self,
+      nixpkgs-stable,
+      nixpkgs-unstable,
+      ...
+    }@inputs:
+    {
+      nixosConfigurations = {
+        buratino = nixpkgs-stable.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [ ./hosts/buratino ];
+        };
 
-      tortila = nixpkgs-stable.lib.nixosSystem {
-        system = "x86_64-linux";
-        specialArgs = { inherit inputs; };
-        modules = [ ./hosts/tortila ];
+        tortila = nixpkgs-stable.lib.nixosSystem {
+          system = "x86_64-linux";
+          specialArgs = { inherit inputs; };
+          modules = [ ./hosts/tortila ];
+        };
       };
     };
-  };
 }

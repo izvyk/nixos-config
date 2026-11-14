@@ -99,8 +99,6 @@ in
   #
   # services.btrfs.autoScrub.fileSystems = [ "/" ]; # not /backup
 
-
-
   # services.syncthing = {
   #   enable = true;
   #   user = "izvyk";

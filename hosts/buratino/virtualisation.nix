@@ -17,7 +17,10 @@
 
   # Guests need DHCP and DNS on the host; libvirt handles NAT and forwarding.
   networking.firewall.interfaces.virbr0 = {
-    allowedUDPPorts = [ 53 67 ];
+    allowedUDPPorts = [
+      53
+      67
+    ];
     allowedTCPPorts = [ 53 ];
   };
 

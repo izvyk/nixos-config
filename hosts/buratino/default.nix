@@ -43,7 +43,6 @@ in
     "config/fonts/fontconfig.nix"
   ];
 
-
   time.timeZone = "Europe/Berlin";
 
   # Select internationalisation properties.
@@ -307,7 +306,7 @@ in
   };
 
   programs.fish.enable = true;
-  environment.shellAliases = lib.mkForce {}; # Don't add aliases to the shell
+  environment.shellAliases = lib.mkForce { }; # Don't add aliases to the shell
   # direnv with nix-direnv; the fish hook is in chezmoi (portable).
   programs.direnv = {
     enable = true;
@@ -624,7 +623,6 @@ in
       }
     ];
   };
-
 
   # Some programs need SUID wrappers, can be configured further or are
   # started in user sessions.
