@@ -22,19 +22,18 @@ in
     withRuby = false;
 
     configure = {
-      # Prepend the Nix store PATH to Neovim's environment, then load your clean Lua file
+      # Add the tools to Neovim's PATH, then load the Lua config. Appended, so
+      # a project's own versions (shell.nix via direnv) win over these.
+      # The module doesn't forward wrapNeovim's extraMakeWrapperArgs, and an
+      # overlay would leak into HM: the rc is the clean place for this.
       customLuaRC = ''
-        vim.env.PATH = "${lib.makeBinPath neovimTools}:" .. vim.env.PATH
+        vim.env.PATH = vim.env.PATH .. ":${lib.makeBinPath neovimTools}"
       ''
       + builtins.readFile ./neovim.lua;
 
-      # wrapperArgs var is not exposed, so nix-level PATH prepending is tricky
-      # nixpkgs ovelrlay, while solving the problem, leaks to HM.
-      # This is the only clean way I've found to prepend PATH that's scoped to neovim only
-
       packages.myVimPackage = with pkgs.vimPlugins; {
         start = [
-          gruvbox-material-nvim
+          gruvbox-nvim # classic gruvbox, like the terminal
           snacks-nvim
           mini-nvim
           guess-indent-nvim
@@ -44,9 +43,13 @@ in
               # Core / Nix
               nix
               bash
+              fish
+              python
               lua
               vim
               vimdoc
+              markdown # LSP hover docs
+              markdown_inline
 
               # System admin & infrastructure
               json

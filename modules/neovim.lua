@@ -1,4 +1,5 @@
 -- init.lua - plain, declarative-by-nature Neovim config
+-- Only non-defaults; `:help vim_diff` lists what Neovim already sets.
 vim.g.mapleader = " "
 
 local opt = vim.opt
@@ -7,18 +8,18 @@ opt.signcolumn = "yes"
 opt.number = true
 opt.relativenumber = true
 opt.scrolloff = 5
+opt.mouse = "a"
+opt.laststatus = 3
+opt.shortmess:append("aI") -- shorter messages, no intro screen
+opt.confirm = true         -- ask to save instead of failing on :q
+opt.splitright = true
+opt.splitbelow = true
 
 opt.expandtab = true
 opt.tabstop = 4
 opt.shiftwidth = 2
-opt.softtabstop = 0
 
 opt.undofile = true
-opt.swapfile = true
-opt.autoread = true
-
-opt.shortmess = "a"
-opt.laststatus = 3
 
 opt.linebreak = true
 opt.breakindent = true
@@ -35,22 +36,17 @@ opt.listchars = {
 
 opt.ignorecase = true
 opt.smartcase = true
-opt.smarttab = true
-opt.mouse = "a"
-opt.backup = false
 
--- Yank to system clipboard
-vim.keymap.set({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
+local map = vim.keymap.set
 
--- Paste from system clipboard
-vim.keymap.set({ "n", "v" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
-vim.keymap.set({ "n", "v" }, "<leader>P", '"+P', { desc = "Paste from system clipboard" })
+-- System clipboard
+map({ "n", "v" }, "<leader>y", '"+y', { desc = "Yank to system clipboard" })
+map({ "n", "v" }, "<leader>p", '"+p', { desc = "Paste from system clipboard" })
+map({ "n", "v" }, "<leader>P", '"+P', { desc = "Paste from system clipboard" })
 
 vim.diagnostic.config({
   virtual_text = { prefix = "● " },
-  underline = true,
   severity_sort = true,
-  update_in_insert = false,
   signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = "",
@@ -61,96 +57,80 @@ vim.diagnostic.config({
   },
 })
 
-require("gruvbox-material").setup({
-  terminal_colors = true,
+-- Classic gruvbox, matching the terminal palette (dotfiles theme.toml).
+require("gruvbox").setup({
   overrides = {
     DiagnosticVirtualTextError = { bg = "NONE" },
     DiagnosticVirtualTextWarn  = { bg = "NONE" },
   },
 })
-vim.cmd.colorscheme("gruvbox-material")
+vim.cmd.colorscheme("gruvbox")
 
--- Treesitter
--- natively start highlighting when a parser exists
+-- Treesitter: highlighting and indentation where a parser exists. Other
+-- filetypes keep Vim's own indent rules.
 vim.api.nvim_create_autocmd("FileType", {
   callback = function(args)
-    pcall(vim.treesitter.start, args.buf)
+    if pcall(vim.treesitter.start, args.buf) then
+      vim.bo[args.buf].indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
+    end
   end,
 })
 
--- Enable Treesitter-based indentation
-vim.api.nvim_create_autocmd("FileType", {
-  callback = function()
-    vim.bo.indentexpr = "v:lua.require'nvim-treesitter'.indentexpr()"
-  end,
-})
-
--- LSP & Formatting
+-- LSP. Neovim's defaults: K hover, grn rename, gra code action,
+-- grr references, gri implementation, gO symbols, [d ]d diagnostics.
 vim.lsp.config("nil_ls", {
   cmd = { "nil" },
   filetypes = { "nix" },
-  root_dir = vim.fs.root(0, { "flake.nix", "default.nix", ".git" }),
+  root_markers = { "flake.nix", "default.nix", ".git" },
   settings = {
     ["nil"] = {
-      formatting = {
-        command = { "nixfmt" },
-      },
+      formatting = { command = { "nixfmt" } },
     },
   },
 })
-
 vim.lsp.enable("nil_ls")
 
--- Scope keymappings strictly to buffers with an active LSP client
 vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(args)
-    local opts = { buffer = args.buf, silent = true }
-    
-    vim.keymap.set("n", "gd", vim.lsp.buf.definition, vim.tbl_extend("force", opts, { desc = "Go to definition" }))
-    vim.keymap.set("n", "K", vim.lsp.buf.hover, vim.tbl_extend("force", opts, { desc = "Hover documentation" }))
-    vim.keymap.set("n", "<leader>f", function()
-      vim.lsp.buf.format({ async = true })
-    end, vim.tbl_extend("force", opts, { desc = "Format current buffer" }))
+    local function bmap(lhs, rhs, desc)
+      map("n", lhs, rhs, { buffer = args.buf, silent = true, desc = desc })
+    end
+    bmap("gd", vim.lsp.buf.definition, "Go to definition")
+    bmap("<leader>f", function() vim.lsp.buf.format({ async = true }) end, "Format buffer")
   end,
 })
 
 -- Plugins
-require("snacks").setup({
-  -- Sysadmin Tools --
-  bigfile = { enabled = true },   -- Prevent freezes on huge log/data files
-  quickfile = { enabled = true }, -- Instant rendering when opening `nvim /path/to/file`
-  bufdelete = { enabled = true }, -- Delete buffers without messing up your window layout
-  scratch = { enabled = true },   -- Quick throwaway buffers for regex or notes
-  terminal = { enabled = true },  -- Clean floating terminal integration
-
-  -- Quality of Life --
-  words = { enabled = true },     -- Auto-highlight identical words under your cursor
-  statuscolumn = { enabled = false }, -- Keep the left gutter simple and clean
-  picker = { enabled = false },   -- Set to true ONLY if you want a built-in fuzzy finder without installing Telescope/fzf
-
-  -- Eye Candy --
-  animate = { enabled = true },  -- UI scrolling animations
-  dashboard = { enabled = false }, -- Skip the fancy ASCII art startup screen
-  zen = { enabled = false },      -- Distraction-free mode isn't needed for config editing
-  scroll = { enabled = true },   -- Smooth scrolling
-});
-
+require("mini.icons").setup()
 require("mini.surround").setup()
 require("mini.pairs").setup()
-require("mini.statusline").setup({
-  use_icons = true,
-})
+require("mini.statusline").setup()
 require("mini.indentscope").setup({
   symbol = "│",
   options = { try_as_border = true },
 })
 
 require("guess-indent").setup({
-  auto_cmd = true,  -- Run automatically when opening a buffer
-  override_editorconfig = false, -- Let .editorconfig files win if they exist
-  -- filetype_exclude = { -- Don't guess in scratchpads or system panels
-  --   "netrw",
-  --   "TelescopePrompt",
-  --   "oil",
-  -- },
+  override_editorconfig = false, -- .editorconfig wins
 })
+
+require("snacks").setup({
+  bigfile = { enabled = true },   -- no freezes on huge logs
+  quickfile = { enabled = true }, -- fast `nvim file`
+  bufdelete = { enabled = true },
+  scratch = { enabled = true },
+  terminal = { enabled = true },
+  picker = { enabled = true },    -- fuzzy finder, uses ripgrep
+  words = { enabled = true },     -- highlight the word under the cursor
+  scroll = { enabled = true },    -- smooth scrolling
+})
+
+map("n", "<leader><space>", function() Snacks.picker.files() end, { desc = "Find files" })
+map("n", "<leader>/", function() Snacks.picker.grep() end, { desc = "Grep" })
+map("n", "<leader>,", function() Snacks.picker.buffers() end, { desc = "Buffers" })
+map("n", "<leader>r", function() Snacks.picker.recent() end, { desc = "Recent files" })
+map("n", "<leader>h", function() Snacks.picker.help() end, { desc = "Help pages" })
+map("n", "<leader>d", function() Snacks.picker.diagnostics() end, { desc = "Diagnostics" })
+map("n", "<leader>bd", function() Snacks.bufdelete() end, { desc = "Delete buffer" })
+map("n", "<leader>.", function() Snacks.scratch() end, { desc = "Scratch buffer" })
+map({ "n", "t" }, "<C-/>", function() Snacks.terminal() end, { desc = "Toggle terminal" })
