@@ -174,6 +174,9 @@ in
       # Passwords live in KeePassXC. Sync's own login keeps working: it uses the
       # login storage directly, not the password manager.
       PasswordManagerEnabled = false;
+      # No built-in VPN: sets browser.ipProtection.enabled false and locks it,
+      # so a Nimbus rollout or an in-browser message can't switch it on.
+      IPProtectionAvailable = false;
     };
   };
 
