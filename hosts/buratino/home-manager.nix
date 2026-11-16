@@ -77,7 +77,6 @@ in
       # 1. Your user-specific packages go here!
       home.packages = with pkgs; [
         # firefox
-        # foot # enabled as a service
         unstable.ghostty
         # unstable.kitty
         # unstable.warp-terminal
@@ -155,11 +154,6 @@ in
 
         # snapshotScript
       ];
-
-      programs.foot = {
-        enable = true;
-        server.enable = true;
-      };
 
       programs.vicinae = {
         enable = true;
