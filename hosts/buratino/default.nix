@@ -186,12 +186,13 @@ in
 
   # Builds on the 6c/12t laptop: most derivations in an update are tiny
   # (configs, units, .desktop files) and take ~2 s each mostly for setup, so
-  # run four at a time. 4 jobs x 3 cores stays within the 12 threads, and the
-  # batch scheduler below still lets GNOME and the browser go first.
+  # run six at a time. 6 jobs x 2 cores = the 12 threads; the batch scheduler
+  # below still lets GNOME and the browser go first. Limit is RAM: heavy
+  # builds (Iosevka ~1.1 GB per process) running together would swap.
   nix = {
     settings = {
-      cores = 3;
-      max-jobs = 4;
+      cores = 2;
+      max-jobs = 6;
 
       auto-optimise-store = true;
       # Fallback to the weekly gc below: when a build sees under 10 GiB free,

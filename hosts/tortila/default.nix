@@ -77,9 +77,10 @@ in
     settings = {
       auto-optimise-store = true;
       # i5-9400T: 6 cores, no SMT. Most derivations in an update are tiny and
-      # take ~2 s each mostly for setup, so run three at a time: 3 x 2 = 6.
+      # take ~2 s each mostly for setup and little CPU, so run four at a time
+      # (4 x 2 = 8 threads on 6 cores is fine for those).
       cores = 2;
-      max-jobs = 3;
+      max-jobs = 4;
 
       # Prevent local compilation globally
       # max-jobs = 0;
