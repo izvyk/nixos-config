@@ -33,6 +33,12 @@ in
   # verifyCommit in the flake URL above.
   nix.settings.experimental-features = [ "verified-fetches" ];
 
+  # NixOS builds fish completions from man pages as one derivation per
+  # package (~130 builds per update) and from every man section, so they
+  # mostly cover C functions. fish_update_completions does the same from
+  # command man pages in ~5 s; upd runs it after deploying.
+  programs.fish.generateCompletions = false;
+
   environment.systemPackages = [
     (pkgs.writeShellApplication {
       name = "upd";
@@ -42,6 +48,17 @@ in
         config.nix.package
       ];
       text = ''
+        # fish completions from the man pages of the running system (see
+        # generateCompletions above). After [b]oot or [r]eboot, the next upd
+        # finds the new generation running and refreshes then.
+        refresh_completions() {
+          ${lib.optionalString config.programs.fish.enable ''
+            echo "Updating fish completions..."
+            ${config.programs.fish.package}/bin/fish -c fish_update_completions >/dev/null 2>&1 || true
+          ''}
+          :
+        }
+
         tmp=$(mktemp -d)
         trap 'rm -rf "$tmp"' EXIT
         # --refresh: fetch master now instead of reusing a cached copy.
@@ -54,6 +71,7 @@ in
         fi
         if [ "$new" = "$current" ]; then
           echo "Already running this generation."
+          refresh_completions
           exit 0
         fi
         if [ -e "$new/sw/bin/gnome-shell" ] \
@@ -63,7 +81,10 @@ in
 
         read -rp "[s]witch, [b]oot, [r]eboot into it, or [N]othing? " answer
         case "$answer" in
-          s) doas ${nixos-rebuild} switch --store-path "$new" ;;
+          s)
+            doas ${nixos-rebuild} switch --store-path "$new"
+            refresh_completions
+            ;;
           b) doas ${nixos-rebuild} boot --store-path "$new" ;;
           r) doas ${nixos-rebuild} boot --store-path "$new" && doas ${systemctl} reboot ;;
           *) echo "Nothing changed." ;;

@@ -184,12 +184,14 @@ in
     allowUnfree = true;
   };
 
-  # Keep one rebuild below the 6c/12t laptop's interactive workload.  Four
-  # build threads leave room for GNOME, the browser, and memory compression.
+  # Builds on the 6c/12t laptop: most derivations in an update are tiny
+  # (configs, units, .desktop files) and take ~2 s each mostly for setup, so
+  # run four at a time. 4 jobs x 3 cores stays within the 12 threads, and the
+  # batch scheduler below still lets GNOME and the browser go first.
   nix = {
     settings = {
-      cores = 4;
-      max-jobs = 1;
+      cores = 3;
+      max-jobs = 4;
 
       auto-optimise-store = true;
       # Fallback to the weekly gc below: when a build sees under 10 GiB free,
@@ -210,8 +212,11 @@ in
         # "${username}"
       ];
     };
-    daemonCPUSchedPolicy = "idle";
-    daemonIOSchedClass = "idle";
+    # Lower priority than interactive work, but not starved: with "idle",
+    # builds only ran while nothing else (the browser) wanted CPU or disk.
+    daemonCPUSchedPolicy = "batch";
+    daemonIOSchedClass = "best-effort";
+    daemonIOSchedPriority = 7;
     gc = {
       automatic = true;
       dates = "weekly";
