@@ -69,12 +69,17 @@ in
       dates = "weekly";
       options = "--delete-older-than 30d";
     };
-    daemonCPUSchedPolicy = "idle";
-    daemonIOSchedClass = "idle";
+    # Below the services in priority, but not starved: with "idle", builds
+    # only ran while nothing else (immich, the VM) wanted CPU or disk.
+    daemonCPUSchedPolicy = "batch";
+    daemonIOSchedClass = "best-effort";
+    daemonIOSchedPriority = 7;
     settings = {
       auto-optimise-store = true;
-      cores = 4;
-      max-jobs = 1;
+      # i5-9400T: 6 cores, no SMT. Most derivations in an update are tiny and
+      # take ~2 s each mostly for setup, so run three at a time: 3 x 2 = 6.
+      cores = 2;
+      max-jobs = 3;
 
       # Prevent local compilation globally
       # max-jobs = 0;
