@@ -1,10 +1,11 @@
 { pkgs, ... }:
 
-# A desktop notification while ssh or ssh-keygen (git commit signing) waits
-# for a touch on the FIDO key. In a terminal they print "Confirm user
-# presence..." to stderr; without one (Claude, an IDE, any GUI app) they run
-# SSH_ASKPASS with SSH_ASKPASS_PROMPT=none instead and SIGTERM it as soon as
-# the key answers or times out. So the notification stays up exactly that long.
+# A desktop notification while ssh (git push) or git commit signing waits
+# for a touch on the FIDO key. In a terminal ssh prints "Confirm user
+# presence..." to stderr; without one (Claude, an IDE, any GUI app) it runs
+# SSH_ASKPASS with SSH_ASKPASS_PROMPT=none instead and SIGTERMs it as soon as
+# the key answers or times out. So the notification stays up exactly that
+# long. Signing needs the wrapper below.
 #
 # The body names the caller from the process tree, plus an optional reason
 # the caller passes in SSH_TOUCH_REASON. Both are what the caller claims to
@@ -61,10 +62,35 @@ let
       close
     '';
   };
+
+  # ssh-keygen -Y sign (git commit signing) never calls SSH_ASKPASS: it only
+  # prints "Confirm user presence" to stderr, which git captures. So git
+  # signs through this wrapper, which runs the notifier around it. Assumes
+  # signing keys are FIDO keys (all of them are); verifying passes through.
+  ssh-keygen-touch = pkgs.writeShellApplication {
+    name = "ssh-keygen-touch";
+    runtimeInputs = [ pkgs.openssh ];
+    text = ''
+      case " $* " in
+        *" -Y sign "*) ;;
+        *) exec ssh-keygen "$@" ;;
+      esac
+      SSH_ASKPASS_PROMPT=none ${ssh-touch-notify}/bin/ssh-touch-notify &
+      notifier=$!
+      rc=0
+      ssh-keygen "$@" || rc=$?
+      kill -TERM "$notifier" 2>/dev/null || true
+      wait "$notifier" || true
+      exit "$rc"
+    '';
+  };
 in
 {
   programs.ssh = {
     enableAskPassword = true;
     askPassword = "${ssh-touch-notify}/bin/ssh-touch-notify";
   };
+  # In /etc/gitconfig, next to the rest of this; ~/.config/git/config
+  # (chezmoi, shared with malvina) doesn't set it.
+  programs.git.config.gpg.ssh.program = "${ssh-keygen-touch}/bin/ssh-keygen-touch";
 }
