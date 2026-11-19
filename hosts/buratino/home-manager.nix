@@ -39,6 +39,10 @@ in
     inputs.home-manager.nixosModules.home-manager
   ];
 
+  # System-wide, not per-user: Quick Unlock authenticates through polkit,
+  # which reads action files only from the system profile.
+  environment.systemPackages = [ pkgs.keepassxc ];
+
   # 2. Tell Home Manager to use the global system packages
   home-manager.useGlobalPkgs = true;
   home-manager.useUserPackages = true;
@@ -88,7 +92,6 @@ in
         baobab
         # materialgram
         # telegram-desktop
-        keepassxc
         mpv
         # vscode
         qpwgraph
