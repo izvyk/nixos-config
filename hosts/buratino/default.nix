@@ -277,12 +277,16 @@ in
     # A lock that doesn't build here (or doesn't evaluate for tortila) is
     # never pushed. upd then finds the same build in the store: the source is
     # identical, so nothing builds twice.
+    # Before the commit it pings the desktop and waits for a key: the build
+    # takes a while, and signing and pushing each need a touch on the key.
     (writeShellApplication {
       name = "updf";
       runtimeInputs = [
         git
         nh
         config.nix.package
+        libnotify
+        glib # gdbus
       ];
       text = ''
         repo=~/Projects/nixos-config
@@ -294,8 +298,19 @@ in
         if ! git -C "$tmp/master" diff --quiet -- flake.lock; then
           nh os build "$tmp/master" -o "$tmp/result"
           nix eval --raw "$tmp/master#nixosConfigurations.tortila.config.system.build.toplevel.drvPath" >/dev/null
-          git -C "$tmp/master" commit -m "flake.lock: update" -- flake.lock
-          git -C "$tmp/master" push origin HEAD:master
+          id=$(notify-send --print-id --urgency=critical --app-name=updf \
+            --icon=software-update-available "updf: ready to commit" \
+            "flake.lock update builds. Press any key in the terminal to commit, sign and push.")
+          # Without a terminal read fails and set -e stops here: no push.
+          read -rsn1 -p "Press any key before commit/sign/push (Ctrl-C aborts) "
+          echo
+          gdbus call --session --dest org.freedesktop.Notifications \
+            --object-path /org/freedesktop/Notifications \
+            --method org.freedesktop.Notifications.CloseNotification "$id" >/dev/null || true
+          SSH_TOUCH_REASON="updf: sign flake.lock commit" \
+            git -C "$tmp/master" commit -m "flake.lock: update" -- flake.lock
+          SSH_TOUCH_REASON="updf: push flake.lock commit" \
+            git -C "$tmp/master" push origin HEAD:master
         fi
         git -C "$repo" pull --ff-only \
           || echo "Checkout not fast-forwarded (local changes?); pull it yourself."
