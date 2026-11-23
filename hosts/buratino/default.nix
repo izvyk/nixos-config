@@ -20,7 +20,6 @@ in
   imports = [
     ./hardware-configuration.nix
     ./gnome.nix
-    ./qt-theme.nix
     ./dock-mode.nix
     ./input.nix
     ./home-manager.nix
