@@ -33,6 +33,11 @@ let
 
     space = "overloadt(space_layer, space, 300)";
 
+    # Enter held in isolation is a held Space, for Claude Code's hold-to-talk,
+    # which watches Space's key repeat. A held Space itself is space_layer,
+    # and Enter is never held otherwise. A tap is sent on release.
+    enter = "timeout(enter, 300ms, space)";
+
     # a = "timeout(w, 250ms, macro2(-1, 0, q))";
     # a = "timeout(macro2(0, 0, w), 250ms, macro2(0, 0, q))"; # BUG: q is typed exactly twice
   }
@@ -52,6 +57,10 @@ let
     # Developer Additions: Quality of life
     n = "backspace";
     m = "delete";
+
+    # Space+V held sends a held Space (V for voice): Claude Code's hold-to-talk
+    # needs Space's key repeat, which a held Space never gives (it's this layer)
+    v = "space";
   };
 
   # Right Alt held is AltGr (sharedMain). AltGr+Space and AltGr+Shift+Space give
