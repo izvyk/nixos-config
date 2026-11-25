@@ -209,6 +209,21 @@ in
     };
   };
 
+  # Sync server for shell history and agent threads (Atuin Threads). Clients
+  # encrypt end to end: this server only ever stores ciphertext records.
+  # Tailnet-only via svc:atuin (network.nix).
+  services.atuin = {
+    enable = true;
+    # Threads need clients >= 18.24; stable has 18.15. Back to the default
+    # package once nixos-26.11 ships >= 18.24.
+    package = pkgs.unstable.atuin;
+    host = "127.0.0.1";
+    port = 2215;
+    # Open only while the one account is registered: otherwise any tailnet
+    # peer could create accounts and fill the disk.
+    openRegistration = true;
+  };
+
   age.secrets."n8n-runners-auth-token" = {
     file = ../../secrets/n8n-runners-auth-token.age;
     owner = "n8n";

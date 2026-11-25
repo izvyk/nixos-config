@@ -107,6 +107,9 @@ in
         unstable.zed-editor
         unstable.claude-code
         unstable.claude-agent-acp
+        # Shell history + agent threads, synced to tortila (svc:atuin).
+        # Unstable for Threads (>= 18.24). Config is in chezmoi.
+        unstable.atuin
         bubblewrap
         # Desktop client for tortila's T3 Code (Connections → Add environment).
         # Unwrapped: the wrapper only adds agent CLIs (codex, gh, git) for a

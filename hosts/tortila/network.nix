@@ -24,6 +24,7 @@ let
     "artemon"
     "t3code"
     "minilab"
+    "atuin"
   ];
 in
 {
@@ -258,6 +259,7 @@ in
         (https "svc:ollama" "http://127.0.0.1:${toString config.services.ollama.port}")
         (https "svc:open-webui" "http://127.0.0.1:${toString config.services.open-webui.port}")
         (https "svc:whisper" "http://127.0.0.1:2214")
+        (https "svc:atuin" "http://127.0.0.1:${toString config.services.atuin.port}")
         (https "svc:transmute" "http://127.0.0.1:3313")
         (https "svc:hermes" "http://127.0.0.1:9119")
         (https "svc:hermes-api" "http://127.0.0.1:8642")
