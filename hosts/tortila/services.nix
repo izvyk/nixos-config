@@ -219,9 +219,10 @@ in
     package = pkgs.unstable.atuin;
     host = "127.0.0.1";
     port = 2215;
-    # Open only while the one account is registered: otherwise any tailnet
-    # peer could create accounts and fill the disk.
-    openRegistration = true;
+    # Closed: the one account exists. Otherwise any tailnet peer that may
+    # reach svc:atuin could create accounts and fill the disk. Briefly set to
+    # true to add another account.
+    openRegistration = false;
   };
 
   age.secrets."n8n-runners-auth-token" = {
