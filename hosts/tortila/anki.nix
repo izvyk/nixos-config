@@ -32,6 +32,7 @@ let
     import getpass
     import sys
 
+    import anki.errors
     import anki.lang
     from anki.collection import Collection
     from aqt.profiles import ProfileManager
@@ -106,7 +107,10 @@ let
             col.close()
 
 
-    main()
+    try:
+        main()
+    except anki.errors.BackendError as e:  # e.g. AnkiWeb wants the email re-confirmed
+        sys.exit(f"AnkiWeb: {e}")
   '';
 
   # Anki's Python library, run by the same interpreter Anki is built with.
