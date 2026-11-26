@@ -332,7 +332,10 @@ in
         "convert.${cloudflare-domain}" = "http://localhost:3313";
 
         # n8n: наружу открываются исключительно production-вебхуки.
-        # cloudflared сопоставляет path как префикс пути запроса. Тестовые
+        # cloudflared трактует path как регулярное выражение (Go regexp),
+        # которое ищется в любом месте пути, поэтому оно привязано к началу
+        # через `^`: без него "/webhook/*" совпадало бы и с /webhook-test/…,
+        # и с /foo/webhook, и с голым /webhook (оболочка редактора). Тестовые
         # триггеры (/webhook-test/…) намеренно исключены: они выполняют
         # workflow в test-режиме и возвращают вывод в HTTP-ответе, что
         # может утекать секреты. Для отладки используйте tailnet-имя
@@ -340,7 +343,7 @@ in
         # Остальное на этом хосте падает в `default = http_status:404` ниже.
         "n8n.${cloudflare-domain}" = {
           service = "http://127.0.0.1:5678";
-          path = "/webhook/*";
+          path = "^/webhook/";
         };
       };
       default = "http_status:404";
