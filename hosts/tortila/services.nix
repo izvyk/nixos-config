@@ -446,7 +446,10 @@ in
       # hid all of it, so Anki died with "unable to open database file" and
       # AnkiConnect never came up. Data: /var/lib/docker/volumes/anki-*/_data.
       anki = {
-        image = "thisisnttheway/headless-anki:latest";
+        # Third-party image that holds the AnkiWeb login: pinned by digest
+        # (= tag sha-4c96c38, 2026-06-16) so an upstream push can't slip in.
+        # To update: check the new image, then bump the digest.
+        image = "thisisnttheway/headless-anki@sha256:f0976e07239082e93e5d6dafa59ab422d8d0e7201380ca85d611ee824399bd2b";
         autoStart = true;
         ports = [
           "127.0.0.1:8765:8765" # AnkiConnect API
