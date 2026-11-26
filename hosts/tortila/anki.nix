@@ -157,6 +157,10 @@ in
     environment = {
       HOME = stateDir;
       QT_QPA_PLATFORM = "offscreen";
+      # tortila has no OpenGL driver (no /run/opengl-driver), so Chromium's
+      # GPU process can't get an EGL display and aborts Anki. Render in
+      # software instead.
+      QTWEBENGINE_CHROMIUM_FLAGS = "--disable-gpu";
     };
     serviceConfig = {
       User = "anki";
