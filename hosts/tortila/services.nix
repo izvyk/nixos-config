@@ -431,35 +431,6 @@ in
         };
         environmentFiles = [ config.age.secrets.hermes-env.path ];
       };
-
-      # Headless Anki with AnkiConnect on :8765.
-      # NOTE: the image cannot log into AnkiWeb on its own. After first deploy,
-      # connect once via VNC (QT_QPA_PLATFORM defaults to "vnc", port 5900) and
-      # enable AnkiWeb sync in the profile (Tools → Preferences → Syncing).
-      # The login token then persists in the anki-data volume, so sync survives
-      # restarts.
-      #
-      # Named volumes, not bind mounts: the image ships its profile in /data
-      # (prefs21.db, "User 1", and addons21/AnkiConnectDev → the AnkiConnect
-      # plugin) and runs as uid 1000. Docker seeds an empty named volume from
-      # the image with that ownership; a bind mount of a root-owned host dir
-      # hid all of it, so Anki died with "unable to open database file" and
-      # AnkiConnect never came up. Data: /var/lib/docker/volumes/anki-*/_data.
-      anki = {
-        # Third-party image that holds the AnkiWeb login: pinned by digest
-        # (= tag sha-4c96c38, 2026-06-16) so an upstream push can't slip in.
-        # To update: check the new image, then bump the digest.
-        image = "thisisnttheway/headless-anki@sha256:f0976e07239082e93e5d6dafa59ab422d8d0e7201380ca85d611ee824399bd2b";
-        autoStart = true;
-        ports = [
-          "127.0.0.1:8765:8765" # AnkiConnect API
-          "127.0.0.1:5900:5900" # VNC for one-time AnkiWeb login / debugging
-        ];
-        volumes = [
-          "anki-data:/data"
-          "anki-export:/export"
-        ];
-      };
     };
   };
 

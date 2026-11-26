@@ -29,6 +29,7 @@ in
     ../../modules/neovim.nix
     ../../modules/upd.nix
     ./services.nix
+    ./anki.nix
     ./sandbox-net.nix
     ./t3code.nix
     ./minilab.nix
