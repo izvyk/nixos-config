@@ -375,8 +375,6 @@ in
   # Persistent data directories, created before containers start
   systemd.tmpfiles.rules = [
     "d /var/lib/transmute 0750 root root -"
-    "d /var/lib/anki 0750 root root -"
-    "d /var/lib/anki-export 0750 root root -"
   ];
 
   age.secrets.cloudflared-convert-oidc = {
@@ -438,7 +436,15 @@ in
       # NOTE: the image cannot log into AnkiWeb on its own. After first deploy,
       # connect once via VNC (QT_QPA_PLATFORM defaults to "vnc", port 5900) and
       # enable AnkiWeb sync in the profile (Tools → Preferences → Syncing).
-      # The login token then persists in /var/lib/anki, so sync survives restarts.
+      # The login token then persists in the anki-data volume, so sync survives
+      # restarts.
+      #
+      # Named volumes, not bind mounts: the image ships its profile in /data
+      # (prefs21.db, "User 1", and addons21/AnkiConnectDev → the AnkiConnect
+      # plugin) and runs as uid 1000. Docker seeds an empty named volume from
+      # the image with that ownership; a bind mount of a root-owned host dir
+      # hid all of it, so Anki died with "unable to open database file" and
+      # AnkiConnect never came up. Data: /var/lib/docker/volumes/anki-*/_data.
       anki = {
         image = "thisisnttheway/headless-anki:latest";
         autoStart = true;
@@ -447,8 +453,8 @@ in
           "127.0.0.1:5900:5900" # VNC for one-time AnkiWeb login / debugging
         ];
         volumes = [
-          "/var/lib/anki:/data"
-          "/var/lib/anki-export:/export"
+          "anki-data:/data"
+          "anki-export:/export"
         ];
       };
     };
