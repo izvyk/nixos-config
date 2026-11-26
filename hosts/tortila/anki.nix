@@ -9,7 +9,7 @@
 #     one-way full sync (e.g. a note type was edited on the phone). Anki would
 #     ask in an invisible dialog; until then n8n keeps adding cards, but
 #     syncing stops. A download discards anything not yet synced.
-# Anki syncs by itself on start and stop; n8n can also call AnkiConnect `sync`.
+# anki-sync.timer syncs every 15 min (collection only, no media).
 { pkgs, ... }:
 let
   stateDir = "/var/lib/anki";
@@ -50,6 +50,12 @@ let
         if PROFILE not in pm.profiles():
             pm.create(PROFILE)
         pm.load(PROFILE)
+        # Sync only via anki-sync.timer (AnkiConnect `sync`), which fails loudly
+        # instead of opening a dialog. Auto-sync on open/close made stop hang
+        # past the 90 s timeout. No media: n8n adds text cards only, and the
+        # whole media collection would download on every unclean restart.
+        pm.profile["autoSync"] = False
+        pm.profile["syncMedia"] = False
         pm.save()
         return pm
 
@@ -175,6 +181,9 @@ in
       ExecStart = "${anki}/bin/anki -b ${stateDir}";
       Restart = "on-failure";
       RestartSec = 10;
+      # Without auto-sync Anki exits on SIGTERM in ~2 s; don't wait 90.
+      # AnkiConnect writes commit at once, so a SIGKILL loses nothing.
+      TimeoutStopSec = 20;
 
       # Hardening. Not MemoryDenyWriteExecute: QtWebEngine's V8 needs W+X
       # pages. Namespaces stay allowed: Chromium's sandbox uses them.
@@ -199,6 +208,32 @@ in
       LockPersonality = true;
       SystemCallArchitectures = "native";
       UMask = "0077";
+    };
+  };
+
+  # AnkiConnect `sync` returns an error (instead of a dialog) when AnkiWeb
+  # demands a full sync; this unit then fails and shows in `systemctl --failed`.
+  # Fix with `doas anki-headless download`.
+  systemd.services.anki-sync = {
+    description = "Sync headless Anki with AnkiWeb";
+    after = [ "anki.service" ];
+    requisite = [ "anki.service" ];
+    serviceConfig = {
+      Type = "oneshot";
+      DynamicUser = true;
+      ExecStart = pkgs.writeShellScript "anki-sync" ''
+        out=$(${pkgs.curl}/bin/curl -sS --max-time 120 http://127.0.0.1:8765 \
+          -d '{"action": "sync", "version": 6}')
+        echo "$out"
+        [ "$(echo "$out" | ${pkgs.jq}/bin/jq -r .error)" = null ]
+      '';
+    };
+  };
+  systemd.timers.anki-sync = {
+    wantedBy = [ "timers.target" ];
+    timerConfig = {
+      OnCalendar = "*:0/15";
+      RandomizedDelaySec = 60;
     };
   };
 }
