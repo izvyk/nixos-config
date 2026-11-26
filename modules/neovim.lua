@@ -37,6 +37,20 @@ opt.listchars = {
 opt.ignorecase = true
 opt.smartcase = true
 
+-- Russian layout: Normal-mode commands work without switching layouts. The
+-- terminal sends characters, not keys, so "о" has to be translated back to "j".
+-- 'langmap' does it for built-in commands only, not for mappings (it misses
+-- multibyte keys there); langmapper adds a Cyrillic twin to every mapping. Not
+-- covered: Command-line text (:w), and keys whose Russian character also exists
+-- on the US layout (the "/" key types "." and repeats; Shift+4 types ";").
+local function lm_escape(s) return vim.fn.escape(s, [[;,."|\]]) end
+opt.langmap = table.concat({
+  lm_escape([[ЁЙЦУКЕНГШЩЗХЪФЫВАПРОЛДЖЭЯЧСМИТЬБЮ]]) .. ";" .. lm_escape([[~QWERTYUIOP{}ASDFGHJKL:"ZXCVBNM<>]]),
+  lm_escape([[ёйцукенгшщзхъфывапролджэячсмить]]) .. ";" .. lm_escape([[`qwertyuiop[]asdfghjkl;'zxcvbnm]]),
+}, ",")
+-- Before any mapping: it wraps vim.keymap.set to add the twins
+require("langmapper").setup({})
+
 local map = vim.keymap.set
 
 -- System clipboard
@@ -134,3 +148,7 @@ map("n", "<leader>d", function() Snacks.picker.diagnostics() end, { desc = "Diag
 map("n", "<leader>bd", function() Snacks.bufdelete() end, { desc = "Delete buffer" })
 map("n", "<leader>.", function() Snacks.scratch() end, { desc = "Scratch buffer" })
 map({ "n", "t" }, "<C-/>", function() Snacks.terminal() end, { desc = "Toggle terminal" })
+
+-- Last: twins for the mappings made without vim.keymap.set, such as Neovim's
+-- own (gcc, grn, [d)
+require("langmapper").automapping({ global = true, buffer = true })

@@ -37,6 +37,7 @@ in
           snacks-nvim
           mini-nvim
           guess-indent-nvim
+          langmapper-nvim # mappings work on the Russian layout (see neovim.lua)
 
           (nvim-treesitter.withPlugins (
             plugins: with plugins; [
