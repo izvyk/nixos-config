@@ -17,10 +17,11 @@
 # Tighten further in the Tailscale admin console: an ACL/grant that lets
 # only the phone reach buratino:22.
 let
-  # Generated on the phone (herdr-mobile → Generate key, Ed25519). The
-  # private half never leaves the phone's keystore.
+  # Generated on the phone by herdr-mobile (tuan3w, the APK from GitHub
+  # Releases; the unrelated dev.herdr.mobile on Google Play never reached
+  # the tailnet). The private half never leaves the phone's keystore.
   phoneSshKeys = [
-    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOmCHYa2CgANu9HOxTFnxy5ra1wBXXYg7+TZ+byGMVfE herdr-mobile"
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPQmReUh9psCbw+2fYcz4IjM7zbvBwoJU5OJJqMI6djs herdr-mobile@buratino"
   ];
 in
 {
