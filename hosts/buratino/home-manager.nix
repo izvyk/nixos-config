@@ -111,6 +111,13 @@ in
         # SSH (sshd.nix). Unstable: not in 26.05; >= 0.9 for the app's
         # remote-api-bridge.
         unstable.herdr
+        # The newer stack: herdr-core (`hc`) runs the terminals, the desktop
+        # app and the official phone app (dev.herdr.app) attach to it. A
+        # separate server from the TUI above: agents started in one don't
+        # show in the other. `hc update` can't replace a store path; update
+        # through nixpkgs.
+        unstable.herdr-core
+        unstable.herdr-desktop
         # Shell history + agent threads, synced to tortila (svc:atuin).
         # Unstable for Threads (>= 18.24). Config is in chezmoi.
         unstable.atuin

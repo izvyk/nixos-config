@@ -17,11 +17,15 @@
 # Tighten further in the Tailscale admin console: an ACL/grant that lets
 # only the phone reach buratino:22.
 let
-  # Generated on the phone by herdr-mobile (tuan3w, the APK from GitHub
-  # Releases; the unrelated dev.herdr.mobile on Google Play never reached
-  # the tailnet). The private half never leaves the phone's keystore.
+  # Generated on the phone by each app; the private half never leaves the
+  # phone's keystore.
   phoneSshKeys = [
+    # herdr-mobile by tuan3w (GPL, APK from GitHub Releases), for the herdr
+    # TUI.
     "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIPQmReUh9psCbw+2fYcz4IjM7zbvBwoJU5OJJqMI6djs herdr-mobile@buratino"
+    # Herdr by Herdr, Inc. (Google Play dev.herdr.app, closed source), for
+    # herdr-core.
+    "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKZIbHx3J8vbKpCQgA0VIAQR8UJ2kgqnT9Dsj2265oVt herdr-mobile"
   ];
 in
 {
