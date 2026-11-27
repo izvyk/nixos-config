@@ -28,6 +28,7 @@ in
     ./hibernate-prep.nix
     ./secure-boot.nix
     ./ssh-touch-notify.nix
+    ./sshd.nix
     ../../modules/neovim.nix
     ../../modules/upd.nix
     ../../modules/nixpkgs-overlay.nix

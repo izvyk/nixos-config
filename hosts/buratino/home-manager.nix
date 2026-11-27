@@ -107,6 +107,10 @@ in
         unstable.zed-editor
         unstable.claude-code
         unstable.claude-agent-acp
+        # Agent multiplexer; herdr-mobile on the phone attaches to it over
+        # SSH (sshd.nix). Unstable: not in 26.05; >= 0.9 for the app's
+        # remote-api-bridge.
+        unstable.herdr
         # Shell history + agent threads, synced to tortila (svc:atuin).
         # Unstable for Threads (>= 18.24). Config is in chezmoi.
         unstable.atuin
