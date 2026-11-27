@@ -44,7 +44,11 @@
 
   # xkbcli: the layout-retype extension (chezmoi) reads key tables from it.
   # Must be on gnome-shell's PATH, hence system-wide.
-  environment.systemPackages = [ pkgs.libxkbcommon ];
+  # gsconnect: see networking.firewall below.
+  environment.systemPackages = [
+    pkgs.libxkbcommon
+    pkgs.gnomeExtensions.gsconnect
+  ];
 
   services.gnome.core-apps.enable = false;
   services.gnome.core-developer-tools.enable = false;
@@ -62,9 +66,20 @@
     }
   ];
 
-  programs.kdeconnect = {
-    enable = true;
-    package = pkgs.gnomeExtensions.gsconnect;
+  # GSConnect without programs.kdeconnect: that module opens 1714-1764 on
+  # every interface (home LAN, but also any café or hotel Wi-Fi), with no
+  # option to narrow it. Here they're open on the tailnet only; the phone
+  # adds the laptop by its Tailscale IP (KDE Connect → Add devices by IP),
+  # since broadcast discovery doesn't cross Tailscale. The package is in
+  # environment.systemPackages above.
+  networking.firewall.interfaces."tailscale0" = rec {
+    allowedTCPPortRanges = [
+      {
+        from = 1714;
+        to = 1764;
+      }
+    ];
+    allowedUDPPortRanges = allowedTCPPortRanges;
   };
 
   home-manager.users.${username} =
