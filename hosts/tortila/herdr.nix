@@ -14,7 +14,8 @@
 # Unlike t3 there is no port to proxy. Core listens on a Unix socket only;
 # a client runs `ssh <machine> hc connect` and speaks the protocol over stdin
 # and stdout. So the way in is an sshd inside the container, proxied from the
-# tailnet as svc:herdr (network.nix), for the keys of dev on this host.
+# tailnet as svc:herdr (network.nix), for the keys of dev on this host and
+# the Herdr phone app's.
 #
 # Core starts with the first `hc` call and stays: the user lingers, so its
 # runtime dir (core's socket) and the terminals outlive the SSH session. A
@@ -85,7 +86,11 @@ in
         isNormalUser = true;
         # Bash, the default: what core's terminals spawn, and a login that
         # prints nothing, which `hc connect` needs.
-        openssh.authorizedKeys.keys = config.users.users.dev.openssh.authorizedKeys.keys;
+        openssh.authorizedKeys.keys = config.users.users.dev.openssh.authorizedKeys.keys ++ [
+          # Herdr app on the phone (Google Play dev.herdr.app); generated
+          # there, the private half stays in the phone's keystore.
+          "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKZIbHx3J8vbKpCQgA0VIAQR8UJ2kgqnT9Dsj2265oVt herdr-mobile"
+        ];
         linger = true;
       };
 
