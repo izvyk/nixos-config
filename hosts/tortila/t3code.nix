@@ -35,8 +35,8 @@ let
   localAddress = "10.233.0.2";
 
   # Without codex. The wrapper puts git and gh on t3's PATH; claude and
-  # opencode come from systemPackages (on the unit's path), so `machinectl
-  # shell` has them for the logins too.
+  # opencode come from systemPackages (agent-box.nix; on the unit's path), so
+  # `machinectl shell` has them for the logins too.
   t3pkg = pkgs.unstable.t3code.override { enableCodex = false; };
 
   # t3 downloads a pinned Chrome for Testing headless shell into
@@ -54,45 +54,7 @@ let
       $out/linux64/$version
   '';
 
-  # Haimaker isn't in OpenCode's built-in catalog (models.dev), so declare it
-  # as an OpenAI-compatible provider. Passed via OPENCODE_CONFIG, which
-  # OpenCode layers over ~/.config/opencode/opencode.json, so that one stays
-  # editable. The key lives in OpenCode's auth store, not here.
-  opencodeConfig = (pkgs.formats.json { }).generate "opencode.json" {
-    "$schema" = "https://opencode.ai/config.json";
-    provider.haimaker = {
-      npm = "@ai-sdk/openai-compatible";
-      name = "Haimaker";
-      options.baseURL = "https://api.haimaker.ai/v1";
-      models."meta/muse-spark-1.3-contributor" = {
-        name = "Muse Spark 1.3 (contributor)";
-        limit = {
-          context = 1048576;
-          output = 131072;
-        };
-      };
-    };
-  };
-
-  # User-level rules, so agents reach for nix instead of apt. Claude reads
-  # ~/.claude/CLAUDE.md; OpenCode falls back to it while it has no AGENTS.md
-  # of its own. Only what agents need for their work: nothing about what's
-  # around the container.
-  agentNotes = pkgs.writeText "t3code-agent-notes.md" ''
-    # Environment
-    - This is NixOS: no apt, no sudo, no FHS. Binaries that npm/pip/curl
-      download and that expect /lib64/ld-linux-*.so won't run; use the
-      nixpkgs package instead.
-    - Missing tool: `nix shell nixpkgs#<pkg> -c <cmd>` or
-      `nix-shell -p <pkg> --run '<cmd>'`. `nixpkgs` is pinned locally.
-    - Project with a flake.nix: `nix develop -c <cmd>`; with a shell.nix:
-      `nix-shell --run '<cmd>'`.
-    - Only the public internet is reachable from here.
-  '';
-
-  # `nixpkgs` for agents' nix shell / nix-shell -p, pinned to this flake's
-  # unstable input: nothing to download or evaluate from scratch.
-  nixPath = [ "nixpkgs=${inputs.nixpkgs-unstable}" ];
+  box = import ./agent-box.nix { inherit inputs pkgs; };
 in
 {
   containers.t3code = {
@@ -103,52 +65,13 @@ in
     inherit localAddress;
 
     config = {
+      imports = [ box.guest ];
+
       system.stateVersion = "26.05";
 
-      # Client side only: the host's daemon does the building.
-      nix = {
-        settings = {
-          experimental-features = [
-            "nix-command"
-            "flakes"
-          ];
-          # Only the pinned registry below; otherwise every flake command
-          # first downloads the global one from channels.nixos.org.
-          flake-registry = "";
-        };
-        registry.nixpkgs.flake = inputs.nixpkgs-unstable;
-        inherit nixPath;
-      };
-
-      networking = {
-        # The host's resolv.conf points at resolved's 127.0.0.53 stub, which
-        # doesn't exist in this network namespace, and the router's DNS is on
-        # the blocked LAN.
-        useHostResolvConf = false;
-        nameservers = [
-          "9.9.9.9"
-          "1.1.1.1"
-        ];
-        # Only the host can reach the container anyway (forward chain below).
-        firewall.enable = false;
-      };
-
-      # What agents and `machinectl shell` sessions get, on top of NixOS's
-      # base set (bash, coreutils, curl, grep, sed, tar, ssh, …); agents also
-      # get git and gh from t3's wrapper. Everything else comes from nix.
-      environment.systemPackages = [
-        t3pkg
-        pkgs.unstable.claude-code
-        # The way to Muse Spark and other non-Anthropic models: nixpkgs builds
-        # it from source, while t3's dedicated Muse Code provider wants Meta's
-        # closed, self-updating CLI.
-        pkgs.unstable.opencode
-        pkgs.jq
-        pkgs.unzip
-        pkgs.nodejs
-        pkgs.python3
-      ];
-      environment.variables.OPENCODE_CONFIG = "${opencodeConfig}";
+      # claude, opencode and the rest of the toolset come from the shared
+      # module; agents also get git and gh from t3's wrapper.
+      environment.systemPackages = [ t3pkg ];
 
       # For pages rendered by the headless browser.
       fonts.packages = with pkgs; [
@@ -176,13 +99,13 @@ in
         environment = {
           T3CODE_TELEMETRY_ENABLED = "false";
           # Login shells get these from the system config; services don't.
-          NIX_PATH = lib.concatStringsSep ":" nixPath;
-          OPENCODE_CONFIG = "${opencodeConfig}";
+          NIX_PATH = lib.concatStringsSep ":" box.nixPath;
+          OPENCODE_CONFIG = "${box.opencodeConfig}";
         };
         preStart = ''
           mkdir -p ~/.t3/tools ~/.claude
           ln -sfnT ${previewBrowser} ~/.t3/tools/chrome-headless-shell
-          ln -sfnT ${agentNotes} ~/.claude/CLAUDE.md
+          ln -sfnT ${box.notes} ~/.claude/CLAUDE.md
         '';
         # No XDG_RUNTIME_DIR here, so t3 skips its per-agent systemd --user
         # scopes and agents stay in this unit's cgroup: the container's limits
@@ -229,15 +152,9 @@ in
     };
   };
 
-  # Agents are the most expendable thing on this box. MemoryMax doesn't cover
-  # swap. No IOWeight: only BFQ or io.cost honour it, and tortila has neither.
-  systemd.services."container@t3code".serviceConfig = {
-    MemoryHigh = "50%";
-    MemoryMax = "60%";
-    MemorySwapMax = "4G";
-    CPUWeight = 50;
-    TasksMax = 4096;
-    OOMScoreAdjust = 500;
+  systemd.services."container@t3code" = {
+    serviceConfig = box.limits;
+    preStart = lib.mkAfter box.rootGuard;
   };
 
   sandbox.interfaces = [ "ve-t3code" ];

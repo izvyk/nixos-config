@@ -1,6 +1,7 @@
 { config, lib, ... }:
-# Network rules for everything untrusted on this host: the t3code container
-# (t3code.nix), the mini-lab VM (minilab.nix) and nix's fixed-output builds.
+# Network rules for everything untrusted on this host: the agent containers
+# (t3code.nix, herdr.nix), the mini-lab VM (minilab.nix) and nix's
+# fixed-output builds.
 # Each sandbox adds its host-side interface to `sandbox.interfaces`; it then
 # gets NATed egress to the public internet only — no LAN, tailnet, docker
 # bridges, other sandboxes or the host itself. The host may still connect in.

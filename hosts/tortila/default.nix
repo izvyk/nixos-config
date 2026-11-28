@@ -32,6 +32,7 @@ in
     ./anki.nix
     ./sandbox-net.nix
     ./t3code.nix
+    ./herdr.nix
     ./minilab.nix
     ../../modules/nixpkgs-overlay.nix
 

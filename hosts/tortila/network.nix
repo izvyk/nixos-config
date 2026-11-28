@@ -23,6 +23,7 @@ let
     "hermes-api"
     "artemon"
     "t3code"
+    "herdr"
     "minilab"
     "atuin"
   ];
@@ -265,6 +266,9 @@ in
         (https "svc:hermes-api" "http://127.0.0.1:8642")
         # Not loopback: T3 Code lives in its own container (t3code.nix).
         (https "svc:t3code" "http://${config.containers.t3code.localAddress}:3773")
+        # SSH into the herdr container (herdr.nix): herdr-core has no port of
+        # its own, clients run `hc connect` over SSH.
+        (tcp "svc:herdr" 22 "tcp://${config.containers.herdr.localAddress}:22")
         (https "svc:artemon" "http://artemon.lan:80")
         (tcp "svc:artemon" 22 "tcp://artemon.lan:22")
         # SSH into the mini-lab VM (minilab.nix): its own keys, no account on
